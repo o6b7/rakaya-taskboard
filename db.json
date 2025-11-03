@@ -1,0 +1,134 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Copywriting Content",
+      "description": "Create content for Mindlax Mobile App landing page and features description",
+      "priority": "High",
+      "assigneeId": 1,
+      "column": "backlog",
+      "tags": ["mobile", "content"],
+      "createdAt": "2024-06-01T12:00:00Z"
+    },
+    {
+      "id": 2,
+      "title": "UI Design Review",
+      "description": "Review and provide feedback on the new dashboard design mockups",
+      "priority": "Medium",
+      "assigneeId": 2,
+      "column": "inprogress",
+      "tags": ["design", "ui"],
+      "createdAt": "2024-06-02T09:30:00Z"
+    },
+    {
+      "id": 3,
+      "title": "Database Optimization",
+      "description": "Optimize database queries and improve response time",
+      "priority": "High",
+      "assigneeId": 3,
+      "column": "todo",
+      "tags": ["backend", "database"],
+      "createdAt": "2024-06-03T14:15:00Z"
+    },
+    {
+      "id": 4,
+      "title": "Mobile App Testing",
+      "description": "Perform comprehensive testing on iOS and Android platforms",
+      "priority": "Medium",
+      "assigneeId": 4,
+      "column": "done",
+      "tags": ["testing", "mobile"],
+      "createdAt": "2024-05-28T11:45:00Z"
+    },
+    {
+      "id": 5,
+      "title": "API Integration",
+      "description": "Integrate payment gateway API into the checkout system",
+      "priority": "High",
+      "assigneeId": 5,
+      "column": "inprogress",
+      "tags": ["backend", "api"],
+      "createdAt": "2024-06-04T16:20:00Z"
+    },
+    {
+      "id": 6,
+      "title": "User Documentation",
+      "description": "Create user manual and help documentation for new features",
+      "priority": "Low",
+      "assigneeId": 6,
+      "column": "backlog",
+      "tags": ["documentation", "content"],
+      "createdAt": "2024-06-05T10:00:00Z"
+    }
+  ],
+  "users": [
+    { 
+      "id": 1, 
+      "name": "Qusai Mansoor", 
+      "avatar": "/assets/avatar1.jpg", 
+      "password": "$2a$10$8K1p/a0dRaB.8K1p/a0dRaB", 
+      "role": "Front-end Developer" 
+    },
+    { 
+      "id": 2, 
+      "name": "Noura Al-Otaibi", 
+      "avatar": "/assets/avatar2.jpg", 
+      "password": "$2a$10$9L2q/b1eSbC.9L2q/b1eSbC", 
+      "role": "UI/UX Designer" 
+    },
+    { 
+      "id": 3, 
+      "name": "Khalid Al-Rashid", 
+      "avatar": "/assets/avatar3.jpg", 
+      "password": "$2a$10$7M3r/c2fTcD.7M3r/c2fTcD", 
+      "role": "Backend Developer" 
+    },
+    { 
+      "id": 4, 
+      "name": "Sarah Al-Faisal", 
+      "avatar": "/assets/avatar4.jpg", 
+      "password": "$2a$10$6N4s/d3gUdE.6N4s/d3gUdE", 
+      "role": "QA Engineer" 
+    },
+    { 
+      "id": 5, 
+      "name": "Fahad Al-Saud", 
+      "avatar": "/assets/avatar5.jpg", 
+      "password": "$2a$10$5O5t/e4hVeF.5O5t/e4hVeF", 
+      "role": "Full Stack Developer" 
+    },
+    { 
+      "id": 6, 
+      "name": "Lama Al-Ghamdi", 
+      "avatar": "/assets/avatar6.jpg", 
+      "password": "$2a$10$4P6u/f5iWgG.4P6u/f5iWgG", 
+      "role": "Technical Writer" 
+    }
+  ],
+  "projects": [
+    { 
+      "id": 1, 
+      "name": "Mindlax Redesign App", 
+      "description": "Complete redesign of the Mindlax mobile application",
+      "createdAt": "2024-06-01T12:00:00Z" 
+    },
+    { 
+      "id": 2, 
+      "name": "E-commerce Platform", 
+      "description": "Development of new e-commerce platform with advanced features",
+      "createdAt": "2024-05-15T08:00:00Z" 
+    },
+    { 
+      "id": 3, 
+      "name": "CRM System Upgrade", 
+      "description": "Upgrade and modernize the existing CRM system",
+      "createdAt": "2024-05-20T14:30:00Z" 
+    },
+    { 
+      "id": 4, 
+      "name": "Data Analytics Dashboard", 
+      "description": "Create comprehensive analytics dashboard for business intelligence",
+      "createdAt": "2024-06-10T09:15:00Z" 
+    }
+  ]
+}
