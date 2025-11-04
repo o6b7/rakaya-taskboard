@@ -1,58 +1,62 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { Project, NewProject } from '../types';
-import { generateUniqueId } from '../utils/idGenerator';
+// src/api/projects.api.ts
+import { createApi } from "@reduxjs/toolkit/query/react";
+import type { Project, NewProject } from "../types";
+import { authorizedBaseQuery } from "../utils/authorizedBaseQuery";
 
 export const projectsApi = createApi({
-  reducerPath: 'projectsApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_API_URL,
-    prepareHeaders: (headers) => {
-      const token = localStorage.getItem('authToken');
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`);
-      }
-      headers.set('Content-Type', 'application/json');
-      return headers;
-    },
-  }),
-  tagTypes: ['Project'],
+  reducerPath: "projectsApi",
+  baseQuery: authorizedBaseQuery,
+  tagTypes: ["Project"],
   endpoints: (builder) => ({
     getProjects: builder.query<Project[], void>({
-      query: () => '/projects',
-      providesTags: ['Project'],
+      query: () => {
+        console.log('🔍 [getProjects] Building query...');
+        return "/projects";
+      },
+      providesTags: ["Project"],
     }),
+
     getProjectById: builder.query<Project, string>({
-      query: (id) => `/projects/${id}`,
-      providesTags: ['Project'],
+      query: (id) => {
+        console.log('🔍 [getProjectById] Building query for ID:', id);
+        return `/projects/${id}`;
+      },
+      providesTags: ["Project"],
     }),
+
     createProject: builder.mutation<Project, NewProject>({
       query: (newProject) => {
-        const projectWithId: Project = {
-          ...newProject,
-          id: generateUniqueId('projects'),
-        };
+        console.log('🔍 [createProject] Building mutation with data:', newProject);
         return {
-          url: '/projects',
-          method: 'POST',
-          body: projectWithId,
+          url: "/projects",
+          method: "POST",
+          body: newProject,
         };
       },
-      invalidatesTags: ['Project'],
+      invalidatesTags: ["Project"],
     }),
+
     updateProject: builder.mutation<Project, { id: string; updates: Partial<Project> }>({
-      query: ({ id, updates }) => ({
-        url: `/projects/${id}`,
-        method: 'PATCH',
-        body: updates,
-      }),
-      invalidatesTags: ['Project'],
+      query: ({ id, updates }) => {
+        console.log('🔍 [updateProject] Building mutation for ID:', id);
+        return {
+          url: `/projects/${id}`,
+          method: "PATCH",
+          body: updates,
+        };
+      },
+      invalidatesTags: ["Project"],
     }),
+
     deleteProject: builder.mutation<void, string>({
-      query: (id) => ({
-        url: `/projects/${id}`,
-        method: 'DELETE',
-      }),
-      invalidatesTags: ['Project'],
+      query: (id) => {
+        console.log('🔍 [deleteProject] Building mutation for ID:', id);
+        return {
+          url: `/projects/${id}`,
+          method: "DELETE",
+        };
+      },
+      invalidatesTags: ["Project"],
     }),
   }),
 });

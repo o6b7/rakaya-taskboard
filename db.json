@@ -229,6 +229,38 @@
       "avatar": "/assets/default-avatar.png",
       "role": "member",
       "createdAt": "2025-11-04T05:47:33.380Z"
+    },
+    {
+      "id": "78ad",
+      "email": "owner@example.com",
+      "password": "123456"
+    },
+    {
+      "id": "U1762240335282c7yc3qsjq",
+      "name": "Test User",
+      "email": "test@example.com",
+      "password": "$2b$10$MggxuWK/SCqBSijYEAJBferhRk5MmJoIVrWEljtr7hClt7/gu.rDK",
+      "avatar": "/assets/default-avatar.png",
+      "role": "member",
+      "createdAt": "2025-11-04T07:12:15.282Z"
+    },
+    {
+      "id": "U1762240338098xtv1di569",
+      "name": "Test User",
+      "email": "test@example.com",
+      "password": "$2b$10$gZzqDWs.rJtpoEC74Wo1l.1DMbQZ0/aY080Qf2dNzejbar48.V55y",
+      "avatar": "/assets/default-avatar.png",
+      "role": "member",
+      "createdAt": "2025-11-04T07:12:18.098Z"
+    },
+    {
+      "id": "U176224033907586acin9wl",
+      "name": "Test User",
+      "email": "test@example.com",
+      "password": "$2b$10$sfaHYLQ9I.dPbsgFklWWUuxmtojmFCBWhgPsQnMDLkcLda7RoBeVi",
+      "avatar": "/assets/default-avatar.png",
+      "role": "member",
+      "createdAt": "2025-11-04T07:12:19.075Z"
     }
   ],
   "projects": [

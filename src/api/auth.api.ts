@@ -1,3 +1,4 @@
+// src/api/auth.api.ts
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import bcrypt from "bcryptjs";
 import jwtEncode from "jwt-encode";
@@ -57,6 +58,7 @@ export const authApi = createApi({
     signup: builder.mutation<User, { userData: SignupCredentials; creatorToken?: string }>({
       queryFn: async ({ userData, creatorToken }) => {
         try {
+          // Only check token if creatorToken is provided (for owner creating users)
           if (creatorToken) {
             const decoded: any = jwtDecode(creatorToken);
             if (decoded.role !== "owner") throw new Error("Only owner can create accounts");
