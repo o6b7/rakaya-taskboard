@@ -1,13 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
 
-// Import RTK Query APIs
 import { tasksApi } from "../api/tasks.api";
 import { projectsApi } from "../api/projects.api";
 import { usersApi } from "../api/users.api";
 import { commentsApi } from "../api/comments.api";
 import { authApi } from "../api/auth.api"; 
 
-// Import slices (local state)
 import tasksReducer from "../store/slices/tasksSlice";
 import projectsReducer from "../store/slices/projectsSlice";
 import usersReducer from "../store/slices/usersSlice";
@@ -22,7 +20,7 @@ export const store = configureStore({
     [projectsApi.reducerPath]: projectsApi.reducer,
     [usersApi.reducerPath]: usersApi.reducer,
     [commentsApi.reducerPath]: commentsApi.reducer,
-    [authApi.reducerPath]: authApi.reducer, // Add this line
+    [authApi.reducerPath]: authApi.reducer, 
 
     // Local slices
     tasks: tasksReducer,
@@ -38,7 +36,7 @@ export const store = configureStore({
       .concat(projectsApi.middleware)
       .concat(usersApi.middleware)
       .concat(commentsApi.middleware)
-      .concat(authApi.middleware), // Add this line
+      .concat(authApi.middleware), 
   devTools: import.meta.env.MODE !== "production",
 });
 

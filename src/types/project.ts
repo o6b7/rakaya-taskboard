@@ -7,6 +7,8 @@ export interface Project {
   deadline: string;
   ownerId: string; 
   members?: string[]; 
+  visibility: string;
+  tags?: string[];
 }
 
 export type NewProject = Omit<Project, "id">;

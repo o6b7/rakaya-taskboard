@@ -6,6 +6,8 @@ interface UISliceState {
   notificationOpen: boolean;
   toastMessage: string | null;
   toastType: "success" | "error" | "warning" | "info" | null;
+  taskModalOpen: boolean,
+  selectedTask: any,
 }
 
 const initialState: UISliceState = {
@@ -14,6 +16,8 @@ const initialState: UISliceState = {
   notificationOpen: false,
   toastMessage: null,
   toastType: null,
+  taskModalOpen: false,
+  selectedTask: null,
 };
 
 const uiSlice = createSlice({
@@ -45,8 +49,19 @@ const uiSlice = createSlice({
       state.toastMessage = null;
       state.toastType = null;
     },
+    openTaskModal: (state, action) => {
+      state.taskModalOpen = true;
+      state.selectedTask = action.payload || null;
+    },
+    closeTaskModal: (state) => {
+      state.taskModalOpen = false;
+      state.selectedTask = null;
+    },
+
   },
+  
 });
+
 
 export const { 
   toggleSidebar, 
@@ -54,6 +69,8 @@ export const {
   setDarkMode,
   toggleNotification, 
   showToast,
-  clearToast 
+  clearToast,
+  openTaskModal,
+  closeTaskModal,
 } = uiSlice.actions;
 export default uiSlice.reducer;

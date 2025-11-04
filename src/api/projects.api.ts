@@ -1,7 +1,7 @@
 // src/api/projects.api.ts
 import { createApi } from "@reduxjs/toolkit/query/react";
 import type { Project, NewProject } from "../types";
-import { authorizedBaseQuery } from "../utils/authorizedBaseQuery";
+import { authorizedBaseQuery } from "../lib/authorizedBaseQuery";
 
 export const projectsApi = createApi({
   reducerPath: "projectsApi",

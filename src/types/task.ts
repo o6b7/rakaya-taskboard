@@ -7,9 +7,10 @@ export interface Task {
   title: string;
   description: string;
   priority: Priority;
-  assigneeId: string;
   column: ColumnType;
-  tags?: string[];
+  assigneeIds?: string[]; 
+  attachments?: string[]; 
+  comments?: string[]; 
   createdAt: string;
   deadline: string;
   projectId?: string;
