@@ -25,16 +25,16 @@ import type { Priority, ColumnType } from "../../types";
 import { getLucideIcon } from "../../lib/getLucideIcon";
 import Avatar from "../Common/Avatar";
 
-export default function TaskModal() {
+export default function AddTaskModal() {
   const dispatch = useDispatch();
   const { taskModalOpen, selectedTask } = useSelector(
     (state: RootState) => state.ui
   );
   const { activeProject } = useSelector((state: RootState) => state.projects);
 
-  const { data: projects = [], isLoading: projectsLoading } =
+  const { data: projects = [] } =
     useGetProjectsQuery();
-  const { data: users = [], isLoading: usersLoading } = useGetAllUsersQuery();
+  const { data: users = [] } = useGetAllUsersQuery();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");

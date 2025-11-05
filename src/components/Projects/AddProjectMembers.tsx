@@ -8,7 +8,7 @@ import clsx from "clsx";
 import { confirmRemoveAttachment } from "../../utils/sweetAlerts";
 import { Button } from "../ui/Button";
 
-interface AddMembersModalProps {
+interface AddProjectMembersProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (updatedUserIds: string[]) => void;
@@ -16,13 +16,13 @@ interface AddMembersModalProps {
   viewOnly?: boolean; 
 }
 
-export default function AddMembersModal({
+export default function AddProjectMembers({
   isOpen,
   onClose,
   onConfirm,
   currentMembers = [],
   viewOnly,
-}: AddMembersModalProps) {
+}: AddProjectMembersProps) {
   const { data: users = [], isLoading } = useGetAllUsersQuery();
   const [search, setSearch] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);

@@ -169,6 +169,7 @@ const Navbar = () => {
                 className="w-full text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30"
                 onClick={() => {
                   localStorage.removeItem("authUser");
+                  localStorage.removeItem("authToken");
                   window.location.reload();
                 }}
               >

@@ -57,7 +57,6 @@ export default function Column({
     () => ({
       accept: "TASK",
       drop: (item: { id: string; from: ColumnType }) => {
-        console.log("Dropping item:", item, "to column:", columnKey);
         if (item.from !== columnKey) {
           onMoveTask(item.id, columnKey);
         }

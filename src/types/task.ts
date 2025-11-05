@@ -19,3 +19,4 @@ export interface Task {
 }
 
 export type NewTask = Omit<Task, "id">;
+
