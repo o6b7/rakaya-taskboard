@@ -100,10 +100,16 @@ export default function BoardView({ projectId }: BoardViewProps) {
         <section className="w-full overflow-x-auto">
           <div className="flex flex-wrap lg:flex-nowrap gap-4 pb-6 w-full px-4 mt-3 justify-center">
             {COLUMN_DEFS.map((col) => {
-              const colTasks =
-              col.key === "needreview"
-                ? tasks.filter((t) => t.column === "needreview" || t.column === "done")
-                : tasks.filter((t) => t.column === col.key);
+              const colTasks = (
+                col.key === "needreview"
+                  ? tasks.filter((t) => t.column === "needreview" || t.column === "done")
+                  : tasks.filter((t) => t.column === col.key)
+              ).sort((a, b) => {
+                if (a.pinned && !b.pinned) return -1;
+                if (!a.pinned && b.pinned) return 1;
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+              });
+
 
               return (
                 <Column

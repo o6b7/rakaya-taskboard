@@ -18,8 +18,8 @@ export const Button: React.FC<ButtonProps> = ({
 
   const styles =
     variant === "primary"
-      ? "bg-blue-600 text-white shadow-sm hover:bg-blue-700 active:bg-blue-800 dark:bg-blue-500 dark:text-white dark:hover:bg-blue-600 dark:active:bg-blue-700"
-      : "bg-transparent text-gray-600 hover:bg-gray-100 active:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700 dark:active:bg-gray-600";
+      ? "bg-primary-500 hover:bg-primary-600 text-white shadow-sm hover:bg-blue-700 active:bg-blue-800 dark:bg-blue-500 dark:text-white dark:hover:bg-blue-600 dark:active:bg-blue-700"
+      : "bg-transparent text-gray-600 hover:bg-gray-100 active:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700 dark:active:bg-gray-600 dark:hover:text-white";
 
   return (
     <button className={`${base} ${styles} ${className}`} {...props}>

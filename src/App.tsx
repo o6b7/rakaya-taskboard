@@ -2,6 +2,7 @@ import Layout from "./components/Layout/Layout";
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import TaskModal from "./components/Tasks/TaskModal";
 import ProjectPage from "./components/Projects/ProjectPage";
+import "./styles/globals.css"
 
 function App() {
   return (

@@ -34,6 +34,12 @@ export const usersApi = createApi({
       }),
       invalidatesTags: ["User"],
     }),
+
+    getUsersByIds: builder.query<User[], string[]>({
+      query: (ids) => `/users?ids=${ids.join(",")}`,
+      providesTags: ["User"],
+    })
+
   }),
 });
 
@@ -42,4 +48,5 @@ export const {
   useGetUserByIdQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,
+  useGetUsersByIdsQuery
 } = usersApi;

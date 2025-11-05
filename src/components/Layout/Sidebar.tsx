@@ -1,20 +1,48 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toggleSidebar } from "../../store/slices/uiSlice";
 import { getLucideIcon } from "../../lib/getLucideIcon";
 import { useGetProjectsQuery } from "../../api/projects.api";
 import { useNavigate, useParams } from "react-router-dom";
 import clsx from "clsx";
 import { useAppDispatch, useAppSelector } from "../../store";
+import { setActiveProject } from "../../store/slices/projectsSlice";
 
 const Sidebar = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { projectId } = useParams<{ projectId: string }>();
   const { sidebarOpen } = useAppSelector((state) => state.ui);
+  const { activeProject } = useAppSelector((state) => state.projects);
+
+  const authUser = JSON.parse(localStorage.getItem("authUser") || "{}");
+  const authUserId = authUser?.id;
 
   const [openProjects, setOpenProjects] = useState(true);
 
   const { data: projects = [], isLoading, error } = useGetProjectsQuery();
+
+  const visibleProjects = projects.filter(
+    (project) =>
+      project.visibility === "public" ||
+      project.members?.includes(authUserId) ||
+      project.ownerId === authUserId
+  );
+
+  // Persist selected project in Redux
+  useEffect(() => {
+    if (projectId && projects.length > 0) {
+      const found = projects.find((p) => p.id === projectId);
+      if (found && (!activeProject || activeProject.id !== found.id)) {
+        dispatch(setActiveProject(found));
+      }
+    }
+  }, [projectId, projects, activeProject, dispatch]);
+
+  const handleSelectProject = (project: any) => {
+    dispatch(setActiveProject(project));
+    navigate(`/projects/${project.id}`);
+    if (window.innerWidth < 640) dispatch(toggleSidebar());
+  };
 
   const navItems = [
     { id: "home", label: "Home", icon: "Home", path: "/" },
@@ -24,7 +52,6 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* Overlay (for mobile) */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/40 sm:hidden z-40"
@@ -34,15 +61,15 @@ const Sidebar = () => {
 
       <aside
         className={clsx(
-          "fixed sm:sticky top-0 left-0 h-screen bg-white dark:bg-dark-surface border-r border-surface-border dark:border-dark-border flex flex-col justify-between p-3 z-50 transition-all duration-300 overflow-y-auto", // Changed to sticky and added overflow-y-auto
+          "fixed sm:sticky top-0 left-0 h-screen bg-white dark:bg-dark-surface border-r border-surface-border dark:border-dark-border flex flex-col justify-between p-3 z-50 transition-all duration-300 overflow-y-auto",
           sidebarOpen ? "translate-x-0 w-64" : "-translate-x-full sm:translate-x-0 sm:w-64"
         )}
       >
-        <div className="flex-1 flex flex-col"> {/* Added flex container */}
+        <div className="flex-1 flex flex-col">
           {/* Logo */}
           <div
             onClick={() => navigate("/")}
-            className="flex items-center gap-2 px-3 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-card rounded-lg transition-colors mb-2 flex-shrink-0" // Added flex-shrink-0
+            className="flex items-center gap-2 px-3 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-card rounded-lg transition-colors mb-2 flex-shrink-0"
           >
             <img src="/vite.svg" alt="Logo" className="w-7 h-7" />
             <h1 className="text-lg font-semibold text-gray-800 dark:text-dark-text">
@@ -50,8 +77,8 @@ const Sidebar = () => {
             </h1>
           </div>
 
-          {/* Main Navigation */}
-          <div className="space-y-1 flex-1"> {/* Added flex-1 for proper scrolling */}
+          {/* Navigation */}
+          <div className="space-y-1 flex-1">
             {/* Home */}
             <button
               onClick={() => {
@@ -64,7 +91,7 @@ const Sidebar = () => {
               <span className="font-medium">Home</span>
             </button>
 
-            {/* Projects Section */}
+            {/* Projects */}
             <div>
               <button
                 onClick={() => setOpenProjects(!openProjects)}
@@ -93,17 +120,15 @@ const Sidebar = () => {
                       Error loading projects
                     </div>
                   )}
-                  {projects.map((project) => (
+
+                  {visibleProjects.map((project) => (
                     <button
                       key={project.id}
-                      onClick={() => {
-                        navigate(`/projects/${project.id}`);
-                        if (window.innerWidth < 640) dispatch(toggleSidebar());
-                      }}
+                      onClick={() => handleSelectProject(project)}
                       className={clsx(
                         "flex items-center gap-2 w-full pl-4 py-2.5 text-sm rounded-lg transition-colors",
-                        projectId === project.id
-                          ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 font-semibold"
+                        activeProject?.id === project.id
+                          ? " text-blue-600 dark:text-blue-300 font-semibold"
                           : "text-gray-600 dark:text-dark-muted hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-dark-card/50"
                       )}
                     >
@@ -113,7 +138,8 @@ const Sidebar = () => {
                       <span className="truncate">{project.name}</span>
                     </button>
                   ))}
-                  {!isLoading && !error && projects.length === 0 && (
+
+                  {!isLoading && !error && visibleProjects.length === 0 && (
                     <div className="pl-4 py-2.5 text-sm text-gray-500 dark:text-dark-muted">
                       No projects found
                     </div>
@@ -140,7 +166,7 @@ const Sidebar = () => {
         </div>
 
         {/* Bottom Card */}
-        <div className="bg-white dark:bg-dark-card border border-surface-border dark:border-dark-border rounded-2xl p-4 shadow-card dark:shadow-card-dark text-center mt-4 flex-shrink-0"> {/* Added flex-shrink-0 */}
+        <div className="bg-white dark:bg-dark-card border border-surface-border dark:border-dark-border rounded-2xl p-4 shadow-card dark:shadow-card-dark text-center mt-4 flex-shrink-0">
           <div className="flex justify-center mb-2">
             {getLucideIcon("Rocket", { className: "w-6 h-6 text-primary-500" })}
           </div>

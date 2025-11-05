@@ -3,26 +3,22 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
-import { openTaskModal, toggleSidebar } from "../../store/slices/uiSlice";
-import { useGetProjectByIdQuery } from "../../api/projects.api";
+import { openTaskModal } from "../../store/slices/uiSlice";
+import { useGetProjectByIdQuery, useUpdateProjectMutation } from "../../api/projects.api";
 import { useGetTasksByProjectQuery } from "../../api/tasks.api";
 import BoardView from "./BoardView";
 import {
-  Lock,
-  LockOpen,
-  Calendar,
-  Tag,
-  Users,
   LayoutGrid,
   Table,
   Clock,
   List,
-  Menu,
-  X,
-  ChevronDown,
-  ChevronUp,
+  icons,
 } from "lucide-react";
 import { Button } from "../ui/Button";
+import { useGetAllUsersQuery } from "../../api/users.api";
+import Avatar from "../Common/Avatar";
+import AddMembersModal from "./AddMembersModal";
+import { getLucideIcon } from "../../lib/getLucideIcon";
 
 export default function ProjectPage() {
   const dispatch = useDispatch();
@@ -31,9 +27,31 @@ export default function ProjectPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [projectInfoOpen, setProjectInfoOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Board");
+  const [addMembersModalOpen, setAddMembersModalOpen] = useState(false);
+  const [viewOnlyMembers, setViewOnlyMembers] = useState(false);
 
-  const { data: project, isLoading: loadingProject } = useGetProjectByIdQuery(projectId!);
+  const { data: project, isLoading: loadingProject, refetch: refetchProject } = useGetProjectByIdQuery(projectId!);
+  const { data: allUsers } = useGetAllUsersQuery();
   const { data: tasks, isLoading: loadingTasks, refetch } = useGetTasksByProjectQuery(projectId!);
+  const [updateProject] = useUpdateProjectMutation();
+
+
+  const handleUpdateMembers = async (updatedUserIds: string[]) => {
+    if (!project) return;
+
+    try {
+      await updateProject({
+        id: project.id,
+        updates: { members: updatedUserIds },
+      }).unwrap();
+
+      await refetchProject();
+      setAddMembersModalOpen(false);
+    } catch (err) {
+      console.error("Failed to update members:", err);
+    }
+  };
+
 
   if (loadingProject || loadingTasks) return <div className="p-8 dark:text-dark-text">Loading...</div>;
   if (!project) return <div className="p-8 dark:text-dark-text">Project not found</div>;
@@ -72,11 +90,7 @@ export default function ProjectPage() {
                   {/* VISIBILITY */}
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                     <div className="flex items-center gap-2 text-gray-500 dark:text-dark-muted sm:min-w-[120px]">
-                      {project.visibility === "private" ? (
-                        <Lock className="w-4 h-4" />
-                      ) : (
-                        <LockOpen className="w-4 h-4" />
-                      )}
+                      {getLucideIcon(project.visibility === "private" ? "Lock" : "LockOpen", { className: "w-5 h-5" })}
                       <span>Visibility</span>
                     </div>
                     <span className={`font-medium px-3 py-1 rounded-full border flex items-center gap-2 w-fit ${
@@ -84,79 +98,94 @@ export default function ProjectPage() {
                         ? "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800" 
                         : "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800"
                     }`}>
-                      {project.visibility === "private" ? (
-                        <Lock className="w-3 h-3" />
-                      ) : (
-                        <LockOpen className="w-3 h-3" />
-                      )}
+                      {getLucideIcon(project.visibility === "private" ? "Lock" : "LockOpen", { className: "w-4 h-4" })}
+
                       {project.visibility} Board
                     </span>
                   </div>
 
                   {/* ASSIGNED TO */}
-                  <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3">
-                    <div className="flex items-center gap-2 text-gray-500 dark:text-dark-muted sm:min-w-[120px]">
-                      <Users className="w-4 h-4" />
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
+                    <div className="flex gap-2 text-gray-500 dark:text-dark-muted sm:min-w-[120px]">
+                      {getLucideIcon("User", { className: "w-4 h-4" })}
                       <span>Assigned to</span>
                     </div>
                     <div className="flex flex-col gap-2 flex-1">
                       <div className="flex items-center gap-3 flex-wrap">
                         {/* First 3 users with names */}
-                        {project.members?.slice(0, 3).map((member) => (
-                          <div 
-                            key={member} 
-                            className="flex items-center gap-2 bg-gray-50 dark:bg-dark-border px-3 py-2 rounded-full border border-gray-200 dark:border-dark-border text-gray-700 dark:text-dark-text flex-shrink-0"
-                          >
-                            <img
-                              src={`https://ui-avatars.com/api/?name=${member}&background=random`}
-                              className="w-5 h-5 rounded-full"
-                              alt={member}
-                            />
-                            <span className="text-sm font-medium whitespace-nowrap">{member}</span>
-                          </div>
-                        ))}
-                        
-                        {/* Next 4 users as overlapping logos only */}
+                        {project.members?.slice(0, 3).map((id) => {
+                          const member = allUsers?.find((u) => u.id === id);
+                          if (!member) return null;
+
+                          return (
+                            <div
+                              key={id}
+                              className="flex items-center gap-2 pr-2 bg-gray-100 dark:bg-dark-border rounded-full border border-gray-200 dark:border-dark-border text-gray-700 dark:text-dark-text flex-shrink-0"
+                            >
+                              <Avatar
+                                name={member.name}
+                                avatar={member.avatar || undefined}
+                                size={35}
+                              />
+                              <span className="text-sm font-medium whitespace-nowrap">{member.name}</span>
+                            </div>
+                          );
+                        })}
+
+                        {/* Next 4 as overlapping avatars */}
                         {project.members && project.members.length > 3 && (
                           <div className="flex -space-x-2">
-                            {project.members.slice(3, 7).map((member, index) => (
-                              <img
-                                key={member}
-                                src={`https://ui-avatars.com/api/?name=${member}&background=random`}
-                                className="w-8 h-8 rounded-full border-2 border-white dark:border-dark-surface"
-                                alt={member}
-                                style={{ zIndex: 4 - index }}
-                              />
-                            ))}
+                            {project.members.slice(3, 7).map((id, index) => {
+                              const member = allUsers?.find((u) => u.id === id);
+                              if (!member) return null;
+                              return (
+                                <div key={member.id} className="border border-gray-300 dark:border-dark-surface rounded-full bg-white dark:bg-dark-border">
+                                  <Avatar
+                                    key={member.id}
+                                    name={member.name}
+                                    avatar={member.avatar || undefined}
+                                    size={35}
+                                  />
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
-                        
-                        {/* +X more indicator for remaining users */}
-                        {project.members && project.members.length > 7 && (
-                          <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-dark-border border-2 border-white dark:border-dark-surface flex items-center justify-center text-xs font-medium text-gray-600 dark:text-dark-text">
-                            +{project.members.length - 7}
-                          </div>
-                        )}
-                        
+
+                        {/* +X more */}
+                          {project.members && project.members.length > 7 && (
+                            <div
+                              className="w-10 h-10 rounded-full bg-gray-100 dark:bg-dark-border border border-gray-300 dark:border-dark-surface flex items-center justify-center text-xs font-medium text-gray-600 dark:text-white cursor-pointer hover:bg-gray-200 dark:hover:bg-dark-card transition -m-5"
+                              onClick={() => {
+                                setViewOnlyMembers(true);
+                                setAddMembersModalOpen(true);
+                              }}
+                            >
+                              +{project.members.length - 5}
+                            </div>
+                          )}
+
+
                         {/* Add another button */}
-                        <div className="flex items-center gap-2 bg-gray-50 dark:bg-dark-border px-3 py-2 rounded-full border border-gray-200 dark:border-dark-border text-gray-700 dark:text-dark-text cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition flex-shrink-0">
-                          <div className="w-5 h-5 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 text-xs">
+                        <div
+                          className="flex items-center gap-2 bg-gray-100 dark:bg-dark-border px-3 py-2 rounded-full border border-gray-200 dark:border-dark-border text-gray-700 dark:text-dark-text cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition flex-shrink-0 ml-5"
+                          onClick={() => setAddMembersModalOpen(true)}
+                        >
+                          <div className="w-5 h-5 flex items-center justify-center rounded-full bg-gray-50 dark:bg-gray-600 text-xs border border-gray-300 dark:border-dark-surface">
                             +
                           </div>
-                          <span className="text-sm font-medium whitespace-nowrap">Add another</span>
+                          <span className="text-sm font-medium whitespace-nowrap">Add members</span>
                         </div>
+
                       </div>
-                      
-                      {/* "Add another for this task" link */}
-                      <span className="text-blue-600 dark:text-blue-400 cursor-pointer text-sm hover:underline">
-                        Add another for this task
-                      </span>
                     </div>
                   </div>
+
                   {/* DEADLINE */}
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                     <div className="flex items-center gap-2 text-gray-500 dark:text-dark-muted sm:min-w-[120px]">
-                      <Calendar className="w-4 h-4" />
+                      {getLucideIcon("Calendar", { className: "w-5 h-5" })}
+
                       <span>Deadline</span>
                     </div>
                     <span className="font-medium bg-gray-50 dark:bg-dark-border px-3 py-1 rounded-full border border-gray-200 dark:border-dark-border text-gray-700 dark:text-dark-text w-fit">
@@ -171,7 +200,7 @@ export default function ProjectPage() {
                   {/* TAGS */}
                   <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3">
                     <div className="flex items-center gap-2 text-gray-500 dark:text-dark-muted sm:min-w-[120px]">
-                      <Tag className="w-4 h-4" />
+                      {getLucideIcon("Tag", { className: "w-5 h-5" })}
                       <span>Tags</span>
                     </div>
                     <div className="flex flex-col gap-2 flex-1">
@@ -202,7 +231,7 @@ export default function ProjectPage() {
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                    <LayoutGrid className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    {getLucideIcon("LayoutGrid", { className: "w-5 h-5 text-blue-600 dark:text-blue-400" })}
                   </div>
                   <div className="text-left">
                     <h2 className="font-semibold text-gray-900 dark:text-dark-text">{project.name}</h2>
@@ -210,9 +239,13 @@ export default function ProjectPage() {
                   </div>
                 </div>
                 {projectInfoOpen ? (
-                  <ChevronUp className="w-5 h-5 text-gray-400 dark:text-dark-muted" />
+                  <>
+                  {getLucideIcon("ChevronUp", { className: "w-5 h-5 text-gray-400 dark:text-dark-muted" })}
+                  </>
                 ) : (
-                  <ChevronDown className="w-5 h-5 text-gray-400 dark:text-dark-muted" />
+                  <>
+                    {getLucideIcon("ChevronDown", { className: "w-5 h-5 text-gray-400 dark:text-dark-muted" })}
+                  </>
                 )}
               </button>
 
@@ -230,9 +263,13 @@ export default function ProjectPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-gray-500 dark:text-dark-muted">
                         {project.visibility === "private" ? (
-                          <Lock className="w-4 h-4" />
+                          <>
+                            {getLucideIcon("Lock", { className: "w-4 h-4" })}
+                          </>
                         ) : (
-                          <LockOpen className="w-4 h-4" />
+                          <>
+                            {getLucideIcon("LockOpen", { className: "w-4 h-4" })}
+                          </>
                         )}
                         <span>Visibility</span>
                       </div>
@@ -242,76 +279,79 @@ export default function ProjectPage() {
                           : "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800"
                       }`}>
                         {project.visibility === "private" ? (
-                          <Lock className="w-3 h-3" />
+                          <>
+                            {getLucideIcon("Lock", { className: "w-4 h-4" })}
+                          </>
                         ) : (
-                          <LockOpen className="w-3 h-3" />
+                          <>
+                            {getLucideIcon("LockOpen", { className: "w-4 h-4" })}
+                          </>
                         )}
                         {project.visibility} Board
                       </span>
                     </div>
 
-                    {/* ASSIGNED TO - MOBILE */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-gray-500 dark:text-dark-muted">
-                        <Users className="w-4 h-4" />
+                    {/* ASSIGNED TO */}
+                    <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3">
+                      <div className="flex items-center gap-2 text-gray-500 dark:text-dark-muted sm:min-w-[120px]">
+                        {getLucideIcon("Users", { className: "w-4 h-4" })}
                         <span>Assigned to</span>
                       </div>
-                      
-                      <div className="flex flex-wrap items-center gap-2">
-                        {/* First 3 users with names */}
-                        {project.members?.slice(0, 3).map((member) => (
-                          <div 
-                            key={member} 
-                            className="flex items-center gap-2 bg-gray-50 dark:bg-dark-border px-3 py-2 rounded-full border border-gray-200 dark:border-dark-border text-gray-700 dark:text-dark-text flex-shrink-0"
-                          >
-                            <img
-                              src={`https://ui-avatars.com/api/?name=${member}&background=random`}
-                              className="w-5 h-5 rounded-full"
-                              alt={member}
-                            />
-                            <span className="text-sm font-medium whitespace-nowrap">{member}</span>
-                          </div>
-                        ))}
-                        
-                        {/* Next 4 users as overlapping logos only */}
-                        {project.members && project.members.length > 3 && (
-                          <div className="flex -space-x-2">
-                            {project.members.slice(3, 7).map((member, index) => (
-                              <img
-                                key={member}
-                                src={`https://ui-avatars.com/api/?name=${member}&background=random`}
-                                className="w-8 h-8 rounded-full border-2 border-white dark:border-dark-surface"
-                                alt={member}
-                                style={{ zIndex: 4 - index }}
-                              />
-                            ))}
-                          </div>
-                        )}
-                        
-                        {/* +X more indicator for remaining users */}
-                        {project.members && project.members.length > 7 && (
-                          <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-dark-border border-2 border-white dark:border-dark-surface flex items-center justify-center text-xs font-medium text-gray-600 dark:text-dark-text">
-                            +{project.members.length - 7}
-                          </div>
-                        )}
-                        
-                        {/* Add another button - mobile compact version */}
-                        <div className="flex items-center gap-2 bg-gray-50 dark:bg-dark-border px-3 py-2 rounded-full border border-gray-200 dark:border-dark-border text-gray-700 dark:text-dark-text cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition flex-shrink-0">
-                          <div className="w-5 h-5 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 text-xs">
-                            +
-                          </div>
-                          <span className="text-sm font-medium whitespace-nowrap">Add</span>
+                      <div className="flex flex-col gap-2 flex-1">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          {project.members?.slice(0, 3).map((id) => {
+                            const member = allUsers?.find((u) => u.id === id);
+                            if (!member) return null;
+
+                            return (
+                              <div 
+                                key={id} 
+                                className="flex items-center gap-2 pr-2 bg-gray-50 dark:bg-dark-borders rounded-full border border-gray-200 dark:border-dark-border text-gray-700 dark:text-dark-text flex-shrink-0"
+                              >
+                                <Avatar 
+                                  name={member.name} 
+                                  avatar={member.avatar || undefined} 
+                                  size={35} 
+                                />
+                                <span className="text-sm font-medium whitespace-nowrap">{member.name}</span>
+                              </div>
+                            );
+                          })}
+
+                          {/* Next 4 as overlapping avatars */}
+                          {project.members && project.members.length > 3 && (
+                            <div className="flex -space-x-2">
+                              {project.members.slice(3, 7).map((id, index) => {
+                                const member = allUsers?.find((u) => u.id === id);
+                                if (!member) return null;
+                                return (
+                                  <img
+                                    key={id}
+                                    src={member.avatar || `https://ui-avatars.com/api/?name=${member.name}&background=random`}
+                                    className="w-8 h-8 rounded-full border-2 border-white dark:border-dark-surface"
+                                    alt={member.name}
+                                    style={{ zIndex: 4 - index }}
+                                  />
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* +X more */}
+                          {project.members && project.members.length > 7 && (
+                            <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-dark-border border-2 border-white dark:border-dark-surface flex items-center justify-center text-xs font-medium text-gray-600 dark:text-dark-text">
+                              +{project.members.length - 7}
+                            </div>
+                          )}
+
                         </div>
                       </div>
-                      
-                      <span className="text-blue-600 dark:text-blue-400 cursor-pointer text-sm block hover:underline">
-                        Add another for this task
-                      </span>
                     </div>
+
                     {/* DEADLINE */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-gray-500 dark:text-dark-muted">
-                        <Calendar className="w-4 h-4" />
+                        {getLucideIcon("Calendar", { className: "w-4 h-4" })}
                         <span>Deadline</span>
                       </div>
                       <span className="font-medium bg-gray-50 dark:bg-dark-border px-3 py-1 rounded-full border border-gray-200 dark:border-dark-border text-gray-700 dark:text-dark-text">
@@ -326,7 +366,7 @@ export default function ProjectPage() {
                     {/* TAGS */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-gray-500 dark:text-dark-muted">
-                        <Tag className="w-4 h-4" />
+                        {getLucideIcon("Tag", { className: "w-4 h-4" })}
                         <span>Tags</span>
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -341,12 +381,6 @@ export default function ProjectPage() {
                           ))
                         )}
                       </div>
-                      <button
-                        onClick={() => dispatch(openTaskModal(null))}
-                        className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 w-100 text-white px-3 py-2 rounded-lg text-sm font-medium"
-                      >
-                        + Task
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -415,6 +449,17 @@ export default function ProjectPage() {
               {activeTab === "List" && (
                 <BoardView projectId={project.id} />
               )}
+              <AddMembersModal
+                isOpen={addMembersModalOpen}
+                onClose={() => {
+                  setAddMembersModalOpen(false);
+                  setViewOnlyMembers(false);
+                }}
+                currentMembers={project.members}
+                onConfirm={handleUpdateMembers}
+                viewOnly={viewOnlyMembers}
+              />
+
             </div>
           </div>
         </div>

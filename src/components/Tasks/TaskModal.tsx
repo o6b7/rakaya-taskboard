@@ -31,12 +31,15 @@ import {
   DialogTitle,
 } from "../ui/Dialog";
 import type { Priority, ColumnType } from "../../types";
+import { getLucideIcon } from "../../lib/getLucideIcon";
+import Avatar from "../Common/Avatar";
 
 export default function TaskModal() {
   const dispatch = useDispatch();
   const { taskModalOpen, selectedTask } = useSelector(
     (state: RootState) => state.ui
   );
+  const { activeProject } = useSelector((state: RootState) => state.projects);
 
   const { data: projects = [], isLoading: projectsLoading } =
     useGetProjectsQuery();
@@ -52,12 +55,16 @@ export default function TaskModal() {
   const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
   const [userSearch, setUserSearch] = useState("");
   const [projectSearch, setProjectSearch] = useState("");
+  const storedUser = localStorage.getItem("authUser");
+  const authUser = storedUser ? JSON.parse(storedUser) : null;
+
 
   const [createTask] = useCreateTaskMutation();
   const [updateTask] = useUpdateTaskMutation();
 
   useEffect(() => {
     if (selectedTask) {
+      // Edit mode: use the task's project
       setTitle(selectedTask.title);
       setDescription(selectedTask.description || "");
       setAttachments(selectedTask.attachments || []);
@@ -67,9 +74,13 @@ export default function TaskModal() {
       setAssigneeIds(selectedTask.assigneeIds || []);
       setDeadline(selectedTask.deadline || "");
     } else {
+      // Add mode: use active project if available
       resetFields();
+      if (activeProject) {
+        setProjectId(activeProject.id);
+      }
     }
-  }, [selectedTask]);
+  }, [selectedTask, activeProject]);
 
   const resetFields = () => {
     setTitle("");
@@ -77,7 +88,7 @@ export default function TaskModal() {
     setAttachments([]);
     setPriority("Low");
     setColumn("backlog");
-    setProjectId("");
+    setProjectId(activeProject?.id || "");
     setAssigneeIds([]);
     setDeadline("");
     setUserSearch("");
@@ -141,6 +152,7 @@ export default function TaskModal() {
       deadline: new Date(deadline).toISOString(),
       projectId,
       assigneeIds,
+      creatorId: authUser?.id,
     };
 
     try {
@@ -242,6 +254,11 @@ export default function TaskModal() {
             <div className="flex items-center gap-2">
               <FolderKanban className="w-5 h-5 text-gray-500 dark:text-gray-400" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Project</span>
+              {activeProject && !selectedTask && (
+                <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded">
+                  Auto-selected from current project
+                </span>
+              )}
             </div>
 
             {/* Project Search */}
@@ -274,12 +291,18 @@ export default function TaskModal() {
                     onChange={() => setProjectId(proj.id)}
                     className="w-4 h-4 text-blue-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-blue-500"
                   />
-                  <span className="text-sm">
-                    {proj.name} ({proj.id})
+                  {/* Project icon */}
+                  <span className="w-6 h-6 flex-shrink-0">
+                    {proj.iconName 
+                      ? getLucideIcon(proj.iconName, { className: "w-5 h-5 text-gray-700 dark:text-gray-300" }) 
+                      : getLucideIcon("Folder", { className: "w-5 h-5 text-gray-700 dark:text-gray-300" })
+                    }
                   </span>
+                  <span className="text-sm truncate">{proj.name} ({proj.id})</span>
                 </label>
               ))}
             </div>
+
           </div>
 
           {/* Deadline */}
@@ -325,11 +348,15 @@ export default function TaskModal() {
                     onChange={() => handleAssigneeToggle(user.id)}
                     className="w-4 h-4 text-blue-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
                   />
-                  <span className="text-sm">
-                    {user.name} ({user.id})
-                  </span>
+                  <Avatar
+                    name={user.name}
+                    avatar={user.avatar || undefined}
+                    size={24}
+                  />
+                  <span className="text-sm truncate">{user.name} ({user.id})</span>
                 </label>
               ))}
+
             </div>
           </div>
 
@@ -367,6 +394,12 @@ export default function TaskModal() {
                       alt={`attachment-${i}`}
                       className="w-full h-20 object-cover rounded-md border border-gray-300 dark:border-gray-600"
                     />
+                    <button
+                      onClick={() => removeAttachment(i)}
+                      className="absolute top-1 right-1 bg-black/60 text-white p-1 rounded-full hover:bg-red-600 transition opacity-0 group-hover:opacity-100"
+                    >
+                      <X size={14} />
+                    </button>
                   </div>
                 ))}
               </div>
