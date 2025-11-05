@@ -12,7 +12,6 @@ import {
   Table,
   Clock,
   List,
-  icons,
 } from "lucide-react";
 import { Button } from "../ui/Button";
 import { useGetAllUsersQuery } from "../../api/users.api";
@@ -306,7 +305,7 @@ export default function ProjectPage() {
                             return (
                               <div 
                                 key={id} 
-                                className="flex items-center gap-2 pr-2 bg-gray-50 dark:bg-dark-borders rounded-full border border-gray-200 dark:border-dark-border text-gray-700 dark:text-dark-text flex-shrink-0"
+                                className="flex items-center gap-2 pr-2 bg-gray-100 dark:bg-dark-border rounded-full border border-gray-200 dark:border-dark-border text-gray-700 dark:text-dark-text flex-shrink-0"
                               >
                                 <Avatar 
                                   name={member.name} 

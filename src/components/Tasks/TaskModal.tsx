@@ -12,15 +12,7 @@ import { useGetProjectsQuery } from "../../api/projects.api";
 import { useGetAllUsersQuery } from "../../api/users.api";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import {
-  Calendar,
-  Upload,
-  X,
-  Tag,
-  FolderKanban,
-  UserCircle2,
-  LayoutList,
-} from "lucide-react";
+
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Textarea } from "../ui/Textarea";
@@ -28,7 +20,6 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
 } from "../ui/Dialog";
 import type { Priority, ColumnType } from "../../types";
 import { getLucideIcon } from "../../lib/getLucideIcon";
@@ -222,7 +213,7 @@ export default function TaskModal() {
           {/* Column & Priority */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex items-center gap-2">
-              <LayoutList className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              {getLucideIcon("LayoutList", { className: "w-5 h-5 text-gray-500 dark:text-gray-400" })}
               <select
                 value={column}
                 onChange={(e) => setColumn(e.target.value as ColumnType)}
@@ -237,7 +228,7 @@ export default function TaskModal() {
             </div>
 
             <div className="flex items-center gap-2">
-              <Tag className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              {getLucideIcon("Tag", { className: "w-5 h-5 text-gray-500 dark:text-gray-400" })}
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as Priority)}
@@ -252,7 +243,7 @@ export default function TaskModal() {
 
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              <FolderKanban className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              {getLucideIcon("FolderKanban", { className: "w-5 h-5 text-gray-500 dark:text-gray-400" })}
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Project</span>
               {activeProject && !selectedTask && (
                 <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded">
@@ -308,7 +299,7 @@ export default function TaskModal() {
           {/* Deadline */}
           <div className="flex flex-col gap-1">
             <label className="flex items-center gap-2 font-medium text-gray-700 dark:text-gray-300">
-              <Calendar className="w-5 h-5" /> Deadline
+              {getLucideIcon("Calendar", { className: "w-5 h-5" })}  Deadline
             </label>
             <Input
               type="date"
@@ -322,7 +313,7 @@ export default function TaskModal() {
           {/* Assignees */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              <UserCircle2 className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              {getLucideIcon("UserCircle2", { className: "w-5 h-5 text-gray-500 dark:text-gray-400" })}
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Assign Users
               </span>
@@ -363,7 +354,7 @@ export default function TaskModal() {
           {/* Attachments */}
           <div className="flex flex-col gap-2">
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-              <Upload className="w-5 h-5" /> Attach Pictures (Max 3)
+              {getLucideIcon("Upload", { className: "w-5 h-5" })} Attach Pictures (Max 3)
             </label>
 
             {/* Upload Box */}
@@ -396,9 +387,9 @@ export default function TaskModal() {
                     />
                     <button
                       onClick={() => removeAttachment(i)}
-                      className="absolute top-1 right-1 bg-black/60 text-white p-1 rounded-full hover:bg-red-600 transition opacity-0 group-hover:opacity-100"
+                      className="absolute top-1 right-1 m-1 bg-black/60 text-white p-1 rounded-full hover:bg-red-600 transition opacity-0 group-hover:opacity-100"
                     >
-                      <X size={14} />
+                      {getLucideIcon("X", { className: "w-4 h-4" })}
                     </button>
                   </div>
                 ))}

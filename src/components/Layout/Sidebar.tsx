@@ -6,6 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import clsx from "clsx";
 import { useAppDispatch, useAppSelector } from "../../store";
 import { setActiveProject } from "../../store/slices/projectsSlice";
+import { Button } from "../ui/Button";
 
 const Sidebar = () => {
   const dispatch = useAppDispatch();
@@ -176,9 +177,9 @@ const Sidebar = () => {
           <p className="text-xs text-gray-500 dark:text-dark-muted mb-3">
             Upgrade for premium features
           </p>
-          <button className="w-full py-2 rounded-lg bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium transition-colors">
+          <Button variant="primary" className="w-full">
             Manage your plan
-          </button>
+          </Button>
         </div>
       </aside>
     </>

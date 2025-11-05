@@ -2,16 +2,6 @@
 
 import React, { useState, useRef } from "react";
 import { useDrag } from "react-dnd";
-import {
-  Paperclip,
-  MessageSquare,
-  MoreVertical,
-  CheckCircle2,
-  Upload,
-  X,
-  Send,
-  Pin,
-} from "lucide-react";
 import type { Task, User } from "../../types";
 import {
   useGetCommentsByTaskQuery,
@@ -27,6 +17,8 @@ import {
 import Avatar from "../Common/Avatar";
 import { useGetAllUsersQuery, useGetUserByIdQuery } from "../../api/users.api";
 import { useGetProjectByIdQuery } from "../../api/projects.api";
+import { getLucideIcon } from "../../lib/getLucideIcon";
+import { Button } from "../ui/Button";
 
 const priorityConfig = {
   High: {
@@ -186,7 +178,6 @@ export default function TaskCard({ task }: { task: Task }) {
       reader.onerror = (err) => reject(err);
     });
 
-  // ✅ Upload file (Base64 simulation)
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -233,7 +224,7 @@ export default function TaskCard({ task }: { task: Task }) {
         {task.pinned && (
           <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10">
             <div className="bg-dark-card dark:bg-white rounded-full p-1 shadow-md">
-              <Pin size={16} className="text-white dark:text-black rotate-45" />
+              {getLucideIcon("Pin", { className: "w-[16px] h-[16px] text-white dark:text-black rotate-45" })}
             </div>
           </div>
         )}
@@ -260,7 +251,7 @@ export default function TaskCard({ task }: { task: Task }) {
                   }`}
                   title={isDone ? "Mark as Needs Review" : "Mark as Done"}
                 >
-                  <CheckCircle2 size={16} />
+                  {getLucideIcon("CheckCircle2", { className: "w-[16px] h-[16px]" })}
                 </button>
               )}
               <div className="relative">
@@ -268,7 +259,7 @@ export default function TaskCard({ task }: { task: Task }) {
                   onClick={() => setShowMenu((prev) => !prev)}
                   className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <MoreVertical size={16} />
+                  {getLucideIcon("MoreVertical", { className: "w-[15px] h-[15px]" })}
                 </button>
 
                 {showMenu && (
@@ -334,14 +325,14 @@ export default function TaskCard({ task }: { task: Task }) {
                 onClick={() => setIsAttachmentOpen((p) => !p)}
                 className="flex items-center gap-1 text-xs hover:text-blue-500"
               >
-                <Paperclip size={14} />
+                {getLucideIcon("Paperclip", { className: "w-[15px] h-[15px]" })}
                 <span>{attachments.length}</span>
               </button>
               <button
                 onClick={() => setIsCommentOpen((p) => !p)}
                 className="flex items-center gap-1 text-xs hover:text-blue-500"
               >
-                <MessageSquare size={14} />
+                {getLucideIcon("MessageSquare", { className: "w-[15px] h-[15px]" })}
                 <span>{comments.length}</span>
               </button>
             </div>
@@ -374,7 +365,7 @@ export default function TaskCard({ task }: { task: Task }) {
                       onClick={() => handleRemoveAttachment(a)}
                       className="absolute top-1 right-1 bg-black/60 text-white p-1 rounded-full hover:bg-red-600 transition"
                     >
-                      <X size={14} />
+                      {getLucideIcon("X", { className: "w-[16px] h-[16px]" })}
                     </button>
                   </div>
                 ))
@@ -386,7 +377,7 @@ export default function TaskCard({ task }: { task: Task }) {
             </div>
 
             <div className="flex items-center gap-2">
-              <button
+              <Button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={attachments.length >= 3}
                 className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg ${
@@ -395,9 +386,9 @@ export default function TaskCard({ task }: { task: Task }) {
                     : "bg-blue-600 hover:bg-blue-700 text-white"
                 }`}
               >
-                <Upload size={16} />
+                {getLucideIcon("Upload", { className: "w-[16px] h-[16px]" })}
                 <span>Upload</span>
-              </button>
+              </Button>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -460,12 +451,14 @@ export default function TaskCard({ task }: { task: Task }) {
                 placeholder="Add a comment..."
                 className="flex-1 text-xs border rounded-md p-2 outline-none focus:ring-1 focus:ring-blue-400 dark:bg-dark-card dark:text-dark-text dark:border-dark-border"
               />
-              <button
+              <Button
                 onClick={handleAddComment}
-                className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                variant="primary"
+                className="p-2"
               >
-                <Send size={14} />
-              </button>
+                {getLucideIcon("Send", { className: "w-[14px] h-[14px]" })}
+              </Button>
+
             </div>
           </div>
         </div>
@@ -489,7 +482,7 @@ export default function TaskCard({ task }: { task: Task }) {
                 onClick={closePreview}
                 className="absolute top-2 right-2 bg-black/60 text-white p-2 rounded-full hover:bg-red-600 transition"
               >
-                <X size={20} />
+                {getLucideIcon("X", { className: "w-[20px] h-[20px]" })}
               </button>
             </div>
           </div>

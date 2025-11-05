@@ -142,7 +142,7 @@
       "assigneeIds": [
         "U5"
       ],
-      "column": "done",
+      "column": "needreview",
       "createdAt": "2024-06-04T16:20:00Z",
       "deadline": "2024-06-25T23:59:59Z",
       "projectId": "P2",
@@ -153,7 +153,8 @@
       "comments": [
         "C14",
         "C15"
-      ]
+      ],
+      "pinned": false
     },
     {
       "id": "T6",
@@ -257,7 +258,8 @@
         "U3",
         "U4"
       ],
-      "column": "todo"
+      "column": "todo",
+      "pinned": true
     },
     {
       "id": "5b6d",

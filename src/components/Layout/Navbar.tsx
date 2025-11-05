@@ -1,15 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import {
-  Search,
-  Bell,
-  Mail,
-  ChevronDown,
-  Menu,
-  Sun,
-  Moon,
-} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toggleSidebar, toggleDarkMode } from "../../store/slices/uiSlice";
 import { useAppDispatch, useAppSelector } from "../../store";
@@ -17,13 +8,13 @@ import { useGetTasksQuery } from "../../api/tasks.api";
 import { useGetProjectsQuery } from "../../api/projects.api";
 import Avatar from "../Common/Avatar";
 import { Button } from "../ui/Button";
+import { getLucideIcon } from "../../lib/getLucideIcon";
 
 const Navbar = () => {
   const dispatch = useAppDispatch();
   const { darkMode } = useAppSelector((state) => state.ui);
   const [openProfile, setOpenProfile] = useState(false);
 
-  // Mocked auth user (replace with actual)
   const authUser = JSON.parse(localStorage.getItem("authUser") || "{}");
   const userId = authUser?.id || "U1";
   const name = authUser?.name || "Brandon Workman";
@@ -60,7 +51,6 @@ const Navbar = () => {
     }
   }, [darkMode]);
 
-
   return (
     <nav className="relative flex items-center justify-between px-4 sm:px-6 py-3 bg-white dark:bg-dark-surface border-b border-surface-border dark:border-dark-border transition-colors duration-300">
       {/* Left section */}
@@ -69,11 +59,11 @@ const Navbar = () => {
           className="sm:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-card transition"
           onClick={() => dispatch(toggleSidebar())}
         >
-          <Menu className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+          {getLucideIcon("Menu", { className: "w-5 h-5 text-gray-600 dark:text-gray-300" })}
         </button>
 
         <div className="flex items-center flex-1 max-w-2xl relative">
-          <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+          {getLucideIcon("Search", { className: "absolute left-3 top-2.5 w-5 h-5 text-gray-400" })}
           <input
             type="text"
             placeholder="Search by name, label, task or team member..."
@@ -90,19 +80,19 @@ const Navbar = () => {
           className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-card transition"
         >
           {darkMode ? (
-            <Sun className="w-5 h-5 text-yellow-400" />
+            getLucideIcon("Sun", { className: "w-5 h-5 text-yellow-400" })
           ) : (
-            <Moon className="w-5 h-5 text-gray-500 dark:text-dark-muted" />
+            getLucideIcon("Moon", { className: "w-5 h-5 text-gray-500 dark:text-dark-muted" })
           )}
         </button>
 
         {/* Mail + Notifications */}
         <button className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-card transition">
-          <Mail className="w-5 h-5 text-gray-500 dark:text-dark-muted" />
+          {getLucideIcon("Mail", { className: "w-5 h-5 text-gray-500 dark:text-dark-muted" })}
         </button>
 
         <button className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-card transition">
-          <Bell className="w-5 h-5 text-gray-500 dark:text-dark-muted" />
+          {getLucideIcon("Bell", { className: "w-5 h-5 text-gray-500 dark:text-dark-muted" })}
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
         </button>
 
@@ -115,11 +105,11 @@ const Navbar = () => {
           <span className="hidden sm:inline text-sm font-medium text-gray-800 dark:text-dark-text">
             {name}
           </span>
-          <ChevronDown
-            className={`w-4 h-4 text-gray-500 dark:text-dark-muted transition-transform duration-300 ${
+          {getLucideIcon("ChevronDown", {
+            className: `w-4 h-4 text-gray-500 dark:text-dark-muted transition-transform duration-300 ${
               openProfile ? "rotate-180" : ""
-            }`}
-          />
+            }`
+          })}
         </div>
 
         {/* Profile Dropdown */}
