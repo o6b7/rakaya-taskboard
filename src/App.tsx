@@ -7,6 +7,7 @@ import LoginPage from "./pages/Auth/Login";
 import { validateToken } from "./lib/authorizedBaseQuery";
 import Layout from "./components/Layout/Layout";
 import { Toaster } from "react-hot-toast";
+import HomePage from "./pages/Home/HomePage";
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
@@ -41,15 +42,14 @@ const App: React.FC = () => {
           }
         />
 
-        {/* Example future private route */}
-        {/* <Route
-          path="/dashboard"
+        <Route
+          path="/"
           element={
             <PrivateRoute>
-              <DashboardPage />
+              <HomePage />
             </PrivateRoute>
           }
-        /> */}
+        />
 
         {/* Default route: redirect depending on token */}
         <Route

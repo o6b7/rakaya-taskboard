@@ -10,7 +10,7 @@
         "U1",
         "U3"
       ],
-      "column": "inprogress",
+      "column": "done",
       "createdAt": "2024-06-01T12:00:00Z",
       "deadline": "2024-06-15T23:59:59Z",
       "projectId": "P1",

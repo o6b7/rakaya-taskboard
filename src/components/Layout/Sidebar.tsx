@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { toggleSidebar } from "../../store/slices/uiSlice";
 import { getLucideIcon } from "../../lib/getLucideIcon";
 import { useGetProjectsQuery } from "../../api/projects.api";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import clsx from "clsx";
 import { useAppDispatch, useAppSelector } from "../../store";
 import { setActiveProject, toggleNewProjectModal } from "../../store/slices/projectsSlice";
@@ -15,6 +15,8 @@ const Sidebar = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { projectId } = useParams<{ projectId: string }>();
+  const location = useLocation(); // To detect current route
+
   const { sidebarOpen } = useAppSelector((state) => state.ui);
   const { activeProject, isNewProjectModalOpen } = useAppSelector((state) => state.projects);
   const authUser = JSON.parse(localStorage.getItem("authUser") || "{}");
@@ -52,11 +54,17 @@ const Sidebar = () => {
     }
   }, [visibleProjects.length]);
 
+  // === Sync activeProject with URL & route ===
   useEffect(() => {
     if (projectId && projects.length > 0) {
       const found = projects.find((p) => p.id === projectId);
       if (found && (!activeProject || activeProject.id !== found.id)) {
         dispatch(setActiveProject(found));
+      }
+    } else {
+      // If no projectId in URL (e.g., on Home, Calendar, etc.) → clear active project
+      if (activeProject) {
+        dispatch(setActiveProject(null));
       }
     }
   }, [projectId, projects, activeProject, dispatch]);
@@ -74,6 +82,18 @@ const Sidebar = () => {
     closeSidebarOnMobile();
   };
 
+  const handleNavigate = (path: string) => {
+    if (activeProject) {
+      dispatch(setActiveProject(null)); // Clear active project when going to non-project pages
+    }
+    navigate(path);
+    closeSidebarOnMobile();
+  };
+
+  const isActiveRoute = (path: string) => {
+    return location.pathname === path;
+  };
+
   const handleCloseModal = () => {
     dispatch(toggleNewProjectModal(false));
   };
@@ -89,10 +109,7 @@ const Sidebar = () => {
       )}
 
       {/* Reusable AddProjectModal */}
-      <AddProjectModal
-        isOpen={isNewProjectModalOpen}
-        onClose={handleCloseModal}
-      />
+      <AddProjectModal isOpen={isNewProjectModalOpen} onClose={handleCloseModal} />
 
       <aside
         className={clsx(
@@ -103,10 +120,7 @@ const Sidebar = () => {
         <div className="flex-1 flex flex-col">
           {/* Logo */}
           <div
-            onClick={() => {
-              navigate("/");
-              closeSidebarOnMobile();
-            }}
+            onClick={() => handleNavigate("/")}
             className="flex items-center gap-2 px-3 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-card rounded-lg transition-colors mb-2 flex-shrink-0"
           >
             <img src="/vite.svg" alt="Logo" className="w-7 h-7" />
@@ -119,11 +133,13 @@ const Sidebar = () => {
           <div className="space-y-1 flex-1">
             {/* Home */}
             <button
-              onClick={() => {
-                navigate("/");
-                closeSidebarOnMobile();
-              }}
-              className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-card transition-colors text-gray-700 dark:text-dark-text hover:text-gray-900 dark:hover:text-white"
+              onClick={() => handleNavigate("/")}
+              className={clsx(
+                "flex items-center gap-3 w-full px-4 py-2.5 rounded-lg transition-colors",
+                isActiveRoute("/")
+                  ? "bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-300 font-semibold"
+                  : "text-gray-700 dark:text-dark-text hover:bg-gray-100 dark:hover:bg-dark-card hover:text-gray-900 dark:hover:text-white"
+              )}
             >
               {getLucideIcon("Home", { className: "w-5 h-5" })}
               <span className="font-medium">Home</span>
@@ -133,7 +149,13 @@ const Sidebar = () => {
             <div>
               <button
                 onClick={() => setOpenProjects(!openProjects)}
-                className="flex items-center justify-between w-full px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-card transition-colors text-gray-700 dark:text-dark-text hover:text-gray-900 dark:hover:text-white"
+                className={clsx(
+                  "flex items-center justify-between w-full px-4 py-2.5 rounded-lg transition-colors",
+                  openProjects
+                    ? "text-gray-900 dark:text-white"
+                    : "text-gray-700 dark:text-dark-text hover:text-gray-900 dark:hover:text-white",
+                  "hover:bg-gray-100 dark:hover:bg-dark-card"
+                )}
               >
                 <div className="flex items-center gap-3">
                   {getLucideIcon(openProjects ? "FolderOpen" : "Folder", { className: "w-5 h-5" })}
@@ -149,7 +171,7 @@ const Sidebar = () => {
                   <button
                     onClick={() => {
                       dispatch(toggleNewProjectModal(true));
-                      closeSidebarOnMobile(); 
+                      closeSidebarOnMobile();
                     }}
                     className="flex items-center gap-2 w-full pl-4 py-2.5 text-sm rounded-lg transition-colors text-gray-600 dark:text-dark-muted hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-dark-card/50 mb-2"
                   >
@@ -194,7 +216,7 @@ const Sidebar = () => {
                             className={clsx(
                               "flex items-center gap-2 w-full pl-4 py-2.5 text-sm rounded-lg transition-colors",
                               activeProject?.id === project.id
-                                ? "text-blue-600 dark:text-blue-300 font-semibold"
+                                ? "bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-300 font-semibold"
                                 : "text-gray-600 dark:text-dark-muted hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-dark-card/50"
                             )}
                           >
@@ -228,11 +250,13 @@ const Sidebar = () => {
 
             {/* Calendar */}
             <button
-              onClick={() => {
-                navigate("/calendar");
-                closeSidebarOnMobile();
-              }}
-              className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-card transition-colors text-gray-700 dark:text-dark-text hover:text-gray-900 dark:hover:text-white"
+              onClick={() => handleNavigate("/calendar")}
+              className={clsx(
+                "flex items-center gap-3 w-full px-4 py-2.5 rounded-lg transition-colors",
+                isActiveRoute("/calendar")
+                  ? "bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-300 font-semibold"
+                  : "text-gray-700 dark:text-dark-text hover:bg-gray-100 dark:hover:bg-dark-card hover:text-gray-900 dark:hover:text-white"
+              )}
             >
               {getLucideIcon("Calendar", { className: "w-5 h-5" })}
               <span className="font-medium">Calendar</span>
@@ -240,11 +264,13 @@ const Sidebar = () => {
 
             {/* Settings */}
             <button
-              onClick={() => {
-                navigate("/settings");
-                closeSidebarOnMobile();
-              }}
-              className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-card transition-colors text-gray-700 dark:text-dark-text hover:text-gray-900 dark:hover:text-white"
+              onClick={() => handleNavigate("/settings")}
+              className={clsx(
+                "flex items-center gap-3 w-full px-4 py-2.5 rounded-lg transition-colors",
+                isActiveRoute("/settings")
+                  ? "bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-300 font-semibold"
+                  : "text-gray-700 dark:text-dark-text hover:bg-gray-100 dark:hover:bg-dark-card hover:text-gray-900 dark:hover:text-white"
+              )}
             >
               {getLucideIcon("Settings", { className: "w-5 h-5" })}
               <span className="font-medium">Settings</span>
