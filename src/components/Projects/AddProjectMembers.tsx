@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState, useMemo } from "react";
 import { X, Check } from "lucide-react";
 import { useGetAllUsersQuery } from "../../api/users.api";

@@ -1,4 +1,3 @@
-"use client";
 import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { Gantt, ViewMode, type Task as GanttTask } from "gantt-task-react";
 import "gantt-task-react/dist/index.css";

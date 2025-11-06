@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toggleSidebar, toggleDarkMode } from "../../store/slices/uiSlice";

@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState, useRef } from "react";
 import { useDrag } from "react-dnd";
 import type { Task, User } from "../../types";

@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
@@ -21,6 +19,7 @@ import { getLucideIcon } from "../../lib/getLucideIcon";
 import AddTaskModal from "../../components/Tasks/AddTaskModal";
 import TaskTableView from "../../components/Tasks/TaskTableView";
 import TaskTimelineView from "../../components/Tasks/TaskTimelineView";
+import TaskListView from "../../components/Tasks/TaskListView";
 
 export default function ProjectPage() {
   const dispatch = useDispatch();
@@ -449,8 +448,9 @@ export default function ProjectPage() {
               )}
 
               {activeTab === "List" && (
-                <BoardView projectId={project.id} />
+                <TaskListView projectId={project.id} />
               )}
+
               <AddMembersModal
                 isOpen={addMembersModalOpen}
                 onClose={() => {

@@ -10,7 +10,7 @@
         "U1",
         "U3"
       ],
-      "column": "done",
+      "column": "needreview",
       "createdAt": "2024-06-01T12:00:00Z",
       "deadline": "2024-06-15T23:59:59Z",
       "projectId": "P1",
@@ -21,7 +21,7 @@
         "C1",
         "C2"
       ],
-      "pinned": false
+      "pinned": true
     },
     {
       "id": "T2",
@@ -34,7 +34,7 @@
         "U4",
         "U1762195789176"
       ],
-      "column": "backlog",
+      "column": "done",
       "createdAt": "2024-06-02T09:30:00Z",
       "deadline": "2024-06-10T23:59:59Z",
       "projectId": "P1",
@@ -44,7 +44,7 @@
         "C4",
         "C5"
       ],
-      "pinned": true
+      "pinned": false
     },
     {
       "id": "T11",
@@ -56,7 +56,7 @@
         "U1",
         "U1762195789176"
       ],
-      "column": "todo",
+      "column": "backlog",
       "createdAt": "2024-06-01T12:00:00Z",
       "deadline": "2024-06-15T23:59:59Z",
       "projectId": "P1",
@@ -89,7 +89,7 @@
         "C7",
         "C8"
       ],
-      "pinned": false
+      "pinned": true
     },
     {
       "id": "T33",
@@ -127,7 +127,7 @@
         "U1",
         "U2"
       ],
-      "column": "inprogress",
+      "column": "needreview",
       "createdAt": "2024-05-28T11:45:00Z",
       "deadline": "2024-06-12T23:59:59Z",
       "projectId": "P1",
@@ -247,37 +247,6 @@
       ],
       "column": "todo",
       "pinned": true
-    },
-    {
-      "id": "8452",
-      "title": "p",
-      "description": "p",
-      "attachments": [],
-      "priority": "Low",
-      "column": "backlog",
-      "createdAt": "2025-11-06T05:40:51.481Z",
-      "deadline": "2025-11-28T00:00:00.000Z",
-      "projectId": "P1",
-      "assigneeIds": [
-        "U1"
-      ],
-      "creatorId": "U1762195789176",
-      "pinned": true
-    },
-    {
-      "id": "ff4d",
-      "title": "f",
-      "description": "f",
-      "attachments": [],
-      "priority": "Low",
-      "column": "backlog",
-      "createdAt": "2025-11-06T06:32:38.671Z",
-      "deadline": "2026-01-17T00:00:00.000Z",
-      "projectId": "P1",
-      "assigneeIds": [
-        "U1762195789176"
-      ],
-      "creatorId": "U1762195789176"
     }
   ],
   "users": [
