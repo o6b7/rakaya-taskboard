@@ -1,22 +1,13 @@
 import React, { useState, useRef } from "react";
 import { useDrag } from "react-dnd";
 import type { Task, User } from "../../types";
-import {
-  useGetCommentsByTaskQuery,
-  useCreateCommentMutation,
-  useDeleteCommentMutation,
-} from "../../api/comments.api";
-import { useUpdateTaskMutation, useDeleteTaskMutation } from "../../api/tasks.api";
-import {
-  confirmRemoveAttachment,
-  showWarning,
-  showSuccess,
-} from "../../utils/sweetAlerts";
-import Avatar from "../Common/Avatar";
+import { useGetCommentsByTaskQuery } from "../../api/comments.api";
 import { useGetAllUsersQuery, useGetUserByIdQuery } from "../../api/users.api";
 import { useGetProjectByIdQuery } from "../../api/projects.api";
 import { getLucideIcon } from "../../lib/getLucideIcon";
 import { Button } from "../ui/Button";
+import Avatar from "../Common/Avatar";
+import { useTaskOperations } from "../../utils/taskHandlers";
 
 const priorityConfig = {
   High: {
@@ -40,176 +31,94 @@ const priorityConfig = {
 };
 
 export default function TaskCard({ task }: { task: Task }) {
-  const [updateTask] = useUpdateTaskMutation();
   const [isCommentOpen, setIsCommentOpen] = useState(false);
   const [isAttachmentOpen, setIsAttachmentOpen] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const { data: comments = [], refetch } = useGetCommentsByTaskQuery(task.id);
-  const [createComment] = useCreateCommentMutation();
-  const { data: allUsers } = useGetAllUsersQuery();
-  const { data: project } = useGetProjectByIdQuery(task.projectId || "");
-  const [deleteComment] = useDeleteCommentMutation();
-  const [deleteTask] = useDeleteTaskMutation(); 
-  const storedUser = localStorage.getItem("authUser");
-  const authUser = storedUser ? JSON.parse(storedUser) : null;
-  const assigneeQueries = task.assigneeIds?.map((id) => useGetUserByIdQuery(id)) || [];
-  const assignees = assigneeQueries.map(q => q.data).filter(Boolean) as User[];
-  const canDrag = authUser?.id === project?.ownerId || project?.members?.includes(authUser?.id);
+  const [showMenu, setShowMenu] = useState(false);
   const [showNotMemberMsg, setShowNotMemberMsg] = useState(false);
   const [shake, setShake] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
-  const canDeleteTask = authUser?.id === task.creatorId || authUser?.id === project?.ownerId;
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const storedUser = localStorage.getItem("authUser");
+  const authUser = storedUser ? JSON.parse(storedUser) : null;
 
-  const handleDragStart = () => {
-    if (!canDrag) {
-      // Trigger shake for non-members
-      setShowNotMemberMsg(true);
-      setShake(true);
-      setTimeout(() => {
-        setShowNotMemberMsg(false);
-        setShake(false);
-      }, 600); // same as animation
-    }
-  };
+  const { data: comments = [], refetch: refetchComments } = useGetCommentsByTaskQuery(task.id);
+  const { data: allUsers } = useGetAllUsersQuery();
+  const { data: project } = useGetProjectByIdQuery(task.projectId || "");
+  const assigneeQueries = task.assigneeIds?.map((id) => useGetUserByIdQuery(id)) || [];
+  const assignees = assigneeQueries.map(q => q.data).filter(Boolean) as User[];
 
+  const isProjectOwner = authUser?.id === project?.ownerId || false;
+  const isProjectMember = isProjectOwner || project?.members?.includes(authUser?.id) || false;
+  const canDrag = isProjectMember;
+  const canDeleteTask = authUser?.id === task.creatorId || isProjectOwner;
+
+  const {
+    handleUpdate,
+    deleteTaskHandler,
+    handleUpload,
+    handleRemoveAttachment,
+    handleAddComment,
+    handleDeleteComment,
+  } = useTaskOperations(task, authUser, isProjectOwner, isProjectMember);
 
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "TASK",
     item: { id: task.id },
-    canDrag: canDrag,
+    canDrag,
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
   }));
 
   const priorityStyle = priorityConfig[task.priority];
-
   const showToggle = task.column === "needreview" || task.column === "done";
   const isDone = task.column === "done";
   const attachments = task.attachments || [];
+  const hasAttachments = attachments.length > 0;
+  const inlineImage = hasAttachments ? attachments[0] : null;
+  const extraAttachments = hasAttachments ? attachments.slice(1) : [];
+
+  const handleDragStart = () => {
+    if (!canDrag) {
+      setShowNotMemberMsg(true);
+      setShake(true);
+      setTimeout(() => {
+        setShowNotMemberMsg(false);
+        setShake(false);
+      }, 600);
+    }
+  };
 
   const handleToggleStatus = async () => {
     const newColumn = task.column === "needreview" ? "done" : "needreview";
-    await updateTask({ id: task.id, updates: { column: newColumn } });
+    await handleUpdate({ column: newColumn });
   };
-
-  const handleAddComment = async () => {
-    if (!commentText.trim()) return;
-
-    const storedUser = localStorage.getItem("authUser");
-    if (!storedUser) {
-      showWarning("You must be logged in to comment");
-      return;
-    }
-
-    const authUser = JSON.parse(storedUser) as { id: string; name: string };
-
-    await createComment({
-      taskId: task.id,
-      userId: authUser.id,
-      content: commentText,
-      createdAt: new Date().toISOString(),
-    });
-
-    setCommentText("");
-    refetch();
-  };
-
-  const handleDeleteComment = async (commentId: string, commentUserId: string) => {
-    if (!authUser) {
-      showWarning("You must be logged in to delete comments");
-      return;
-    }
-
-    const canDelete =
-      authUser.id === commentUserId || authUser.id === project?.ownerId;
-
-    if (!canDelete) {
-      showWarning("You cannot delete this comment");
-      return;
-    }
-
-    const confirmed = await confirmRemoveAttachment();
-    if (!confirmed) return;
-
-    await deleteComment(commentId);
-    showSuccess("Comment deleted!");
-    refetch();
-  };
-  
-  const handleDeleteTask = async () => {
-    if (!canDeleteTask) {
-      showWarning("You don’t have permission to delete this task");
-      return;
-    }
-
-    const confirmed = await confirmRemoveAttachment();
-    if (!confirmed) return;
-
-    try {
-      await deleteTask(task.id).unwrap();
-      showSuccess("Task permanently deleted!");
-    } catch (error) {
-      console.error("Failed to delete task:", error);
-      showWarning("Failed to delete task");
-    } finally {
-      setShowMenu(false);
-    }
-  };
-
 
   const handlePinTask = async () => {
-    await updateTask({ id: task.id, updates: { pinned: !task.pinned } });
-    showSuccess(task.pinned ? "Task unpinned" : "Task pinned");
+    await handleUpdate({ pinned: !task.pinned });
     setShowMenu(false);
-  };
-
-
-  const fileToBase64 = (file: File): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (err) => reject(err);
-    });
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (attachments.length >= 3) {
-      showWarning("Maximum 3 pictures allowed");
-      return;
-    }
-
-    const base64 = await fileToBase64(file);
-    const updated = [...attachments, base64];
-    await updateTask({ id: task.id, updates: { attachments: updated } });
-  };
-
-  // ✅ Remove Attachment with confirmation
-  const handleRemoveAttachment = async (name: string) => {
-    const confirmed = await confirmRemoveAttachment();
-    if (!confirmed) return;
-
-    const updated = attachments.filter((a) => a !== name);
-    await updateTask({ id: task.id, updates: { attachments: updated } });
-    showSuccess("Removed!");
   };
 
   const handlePreview = (src: string) => setPreviewImage(src);
   const closePreview = () => setPreviewImage(null);
 
+  const handleAddCommentWrapper = async () => {
+    if (!commentText.trim()) return;
+    await handleAddComment(commentText, setCommentText);
+    refetchComments();
+  };
+
   return (
     <div className="relative w-full">
+      {/* Not Member Warning */}
       {showNotMemberMsg && (
         <div className="absolute top-20 right-5 z-50 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-3 py-1 rounded shadow text-xs font-medium animate-fadeIn">
           You are not a member of this project
         </div>
       )}
+
+      {/* Task Card */}
       <div
         className={`relative w-full rounded-md border
           bg-white dark:bg-dark-card
@@ -219,6 +128,7 @@ export default function TaskCard({ task }: { task: Task }) {
           ${shake ? "shadow-2xl scale-105 animate-shake filter blur-sm" : ""}
           ${isDone ? "border-2 border-green-500 dark:border-green-500" : ""}`}
       >
+        {/* Pinned Indicator */}
         {task.pinned && (
           <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10">
             <div className="bg-dark-card dark:bg-white rounded-full p-1 shadow-md">
@@ -226,9 +136,29 @@ export default function TaskCard({ task }: { task: Task }) {
             </div>
           </div>
         )}
-
-        {/* Draggable area */}
+        {/* Draggable Area */}
         <div ref={drag} onMouseDown={handleDragStart} className="p-4 cursor-grab active:cursor-grabbing">
+          {/* Inline Attachment (First Image Always Visible) */}
+          {inlineImage && (
+            <div className="mb-3 -mx-4 px-4">
+              <div className="relative rounded-lg overflow-hidden border border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-dark-surface">
+                <img
+                  src={inlineImage}
+                  alt="Inline attachment"
+                  className="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition"
+                  onClick={() => handlePreview(inlineImage)}
+                />
+                {isProjectMember && (
+                  <button
+                    onClick={() => handleRemoveAttachment(inlineImage)}
+                    className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full hover:bg-red-600 transition"
+                  >
+                    {getLucideIcon("X", { className: "w-4 h-4" })}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
           {/* Header */}
           <div className="flex items-center justify-between mb-3">
             <div
@@ -237,7 +167,6 @@ export default function TaskCard({ task }: { task: Task }) {
               <span className={`w-1.5 h-1.5 rounded-full ${priorityStyle.dotColor}`} />
               {task.priority}
             </div>
-
             <div className="flex items-center gap-1">
               {showToggle && (
                 <button
@@ -259,7 +188,6 @@ export default function TaskCard({ task }: { task: Task }) {
                 >
                   {getLucideIcon("MoreVertical", { className: "w-[15px] h-[15px]" })}
                 </button>
-
                 {showMenu && (
                   <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border rounded-md shadow-md z-20 animate-fadeIn">
                     <button
@@ -268,10 +196,9 @@ export default function TaskCard({ task }: { task: Task }) {
                     >
                       {task.pinned ? "Unpin Task" : "Pin Task"}
                     </button>
-
                     {canDeleteTask && (
                       <button
-                        onClick={handleDeleteTask}
+                        onClick={deleteTaskHandler}
                         className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900 transition"
                       >
                         Delete Task
@@ -280,7 +207,6 @@ export default function TaskCard({ task }: { task: Task }) {
                   </div>
                 )}
               </div>
-
             </div>
           </div>
 
@@ -300,13 +226,8 @@ export default function TaskCard({ task }: { task: Task }) {
           {/* Footer */}
           <div className="flex items-center justify-between">
             <div className="flex -space-x-2">
-              {assignees.slice(0, 5).map((user, i) => (
-                <Avatar 
-                  key={user.id}
-                  name={user.name} 
-                  avatar={user.avatar} 
-                  size={25} 
-                />
+              {assignees.slice(0, 5).map((user) => (
+                <Avatar key={user.id} name={user.name} avatar={user.avatar} size={25} />
               ))}
               {assignees.length > 5 && (
                 <div className="w-6 h-6 rounded-full bg-gray-100 dark:bg-dark-surface border-2 border-white flex items-center justify-center">
@@ -316,12 +237,11 @@ export default function TaskCard({ task }: { task: Task }) {
                 </div>
               )}
             </div>
-
-            {/* Attachments & Comments */}
             <div className="flex items-center gap-3 text-gray-400 dark:text-dark-muted">
               <button
                 onClick={() => setIsAttachmentOpen((p) => !p)}
                 className="flex items-center gap-1 text-xs hover:text-blue-500"
+                title={`View ${extraAttachments.length} more attachment${extraAttachments.length !== 1 ? 's' : ''}`}
               >
                 {getLucideIcon("Paperclip", { className: "w-[15px] h-[15px]" })}
                 <span>{attachments.length}</span>
@@ -335,128 +255,118 @@ export default function TaskCard({ task }: { task: Task }) {
               </button>
             </div>
           </div>
-
-
         </div>
 
-        {/* Attachments */}
+        {/* Extra Attachments Dropdown */}
         <div
-          className={`overflow-hidden transition-[max-height,opacity] duration-500 ease-in-out ${
+          className={`overflow-hidden transition-[max-height,opacity] duration-500 ease-in-out border-t border-gray-200 dark:border-dark-border ${
             isAttachmentOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
           }`}
         >
-          <div className="bg-gray-50 dark:bg-dark-surface border-t border-gray-200 dark:border-dark-border p-3 space-y-3">
-            <div className="flex flex-wrap gap-3">
-              {attachments.length > 0 ? (
-                attachments.map((a, idx) => (
+          <div className="bg-gray-50 dark:bg-dark-surface p-3 space-y-3">
+            {extraAttachments.length > 0 ? (
+              <div className="flex flex-wrap gap-3">
+                {extraAttachments.map((src, idx) => (
                   <div
                     key={idx}
                     className="relative w-28 h-28 border border-gray-300 dark:border-dark-border rounded-lg overflow-hidden cursor-pointer hover:scale-105 transition-transform"
                   >
                     <img
-                      src={a}
-                      alt={`attachment-${idx}`}
+                      src={src}
+                      alt={`extra-attachment-${idx}`}
                       className="object-cover w-full h-full"
-                      onClick={() => handlePreview(a)}
+                      onClick={() => handlePreview(src)}
                     />
-                    <button
-                      onClick={() => handleRemoveAttachment(a)}
-                      className="absolute top-1 right-1 bg-black/60 text-white p-1 rounded-full hover:bg-red-600 transition"
-                    >
-                      {getLucideIcon("X", { className: "w-[16px] h-[16px]" })}
-                    </button>
+                    {isProjectMember && (
+                      <button
+                        onClick={() => handleRemoveAttachment(src)}
+                        className="absolute top-1 right-1 bg-black/60 text-white p-1 rounded-full hover:bg-red-600 transition"
+                      >
+                        {getLucideIcon("X", { className: "w-[16px] h-[16px]" })}
+                      </button>
+                    )}
                   </div>
-                ))
-              ) : (
-                <p className="text-xs text-gray-500 dark:text-dark-muted italic">
-                  No attachments yet.
-                </p>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={attachments.length >= 3}
-                className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg ${
-                  attachments.length >= 3
-                    ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700 text-white"
-                }`}
-              >
-                {getLucideIcon("Upload", { className: "w-[16px] h-[16px]" })}
-                <span>Upload</span>
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleFileUpload}
-              />
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500 dark:text-dark-muted italic">
+                No additional attachments.
+              </p>
+            )}
+            {isProjectMember && (
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={attachments.length >= 3}
+                  className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg ${
+                    attachments.length >= 3
+                      ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                      : "bg-blue-600 hover:bg-blue-700 text-white"
+                  }`}
+                >
+                  {getLucideIcon("Upload", { className: "w-[16px] h-[16px]" })}
+                  <span>Upload</span>
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleUpload}
+                />
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Comments */}
-        <div className={`overflow-hidden transition-[max-height,opacity] duration-500 ease-in-out ${isCommentOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}>
+        {/* Comments Section */}
+        <div
+          className={`overflow-hidden transition-[max-height,opacity] duration-500 ease-in-out ${
+            isCommentOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
           <div className="bg-gray-50 dark:bg-dark-surface border-t border-gray-200 dark:border-dark-border p-3 space-y-2">
-            {comments.map((c) => {
-              const user = allUsers?.find((u) => u.id === c.userId);
-              const canDelete =
-                authUser?.id === c.userId || authUser?.id === project?.ownerId;
-
-              return (
-                <div
-                  key={c.id}
-                  className="flex items-start gap-2 p-2 bg-white dark:bg-dark-card border rounded-md text-xs text-gray-700 dark:text-dark-text"
-                >
-                  {/* Avatar */}
-                  <Avatar
-                    name={user?.name || "Unknown"}
-                    avatar={user?.avatar}
-                    size={25}
-                  />
-
-                  {/* Comment content */}
-                  <div className="flex-1">
-                    <p className="text-[11px] text-gray-500 dark:text-dark-muted">
-                      {user?.name || "Unknown"}
-                    </p>
-                    <p className="text-xs text-gray-700 dark:text-dark-text">
-                      {c.content}
-                    </p>
+            {comments.length === 0 ? (
+              <p className="text-xs text-gray-500 dark:text-dark-muted italic">No comments yet.</p>
+            ) : (
+              comments.map((c) => {
+                const user = allUsers?.find((u) => u.id === c.userId);
+                const canDelete = c.userId === authUser?.id || isProjectOwner;
+                return (
+                  <div
+                    key={c.id}
+                    className="flex items-start gap-2 p-2 bg-white dark:bg-dark-card border rounded-md text-xs text-gray-700 dark:text-dark-text"
+                  >
+                    <Avatar name={user?.name || "Unknown"} avatar={user?.avatar} size={25} />
+                    <div className="flex-1">
+                      <p className="text-[11px] text-gray-500 dark:text-dark-muted">
+                        {user?.name || "Unknown"}
+                      </p>
+                      <p className="text-xs text-gray-700 dark:text-dark-text">{c.content}</p>
+                    </div>
+                    {canDelete && (
+                      <button
+                        onClick={() => handleDeleteComment(c.id, c.userId)}
+                        className="ml-2 text-red-500 hover:text-red-700 text-xs"
+                      >
+                        Delete
+                      </button>
+                    )}
                   </div>
-
-                  {/* Delete button */}
-                  {canDelete && (
-                    <button
-                      onClick={() => handleDeleteComment(c.id, c.userId)}
-                      className="ml-2 text-red-500 hover:text-red-700 text-xs"
-                    >
-                      Delete
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-
-            {/* Add Comment Input */}
+                );
+              })
+            )}
             <div className="flex items-center gap-2 mt-2">
               <input
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleAddCommentWrapper()}
                 placeholder="Add a comment..."
                 className="flex-1 text-xs border rounded-md p-2 outline-none focus:ring-1 focus:ring-blue-400 dark:bg-dark-card dark:text-dark-text dark:border-dark-border"
               />
-              <Button
-                onClick={handleAddComment}
-                variant="primary"
-                className="p-2"
-              >
+              <Button onClick={handleAddCommentWrapper} className="p-2">
                 {getLucideIcon("Send", { className: "w-[14px] h-[14px]" })}
               </Button>
-
             </div>
           </div>
         </div>
@@ -471,11 +381,7 @@ export default function TaskCard({ task }: { task: Task }) {
               className="relative max-w-[95vw] max-h-[90vh] animate-fadeIn"
               onClick={(e) => e.stopPropagation()}
             >
-              <img
-                src={previewImage}
-                alt="Preview"
-                className="object-contain rounded-lg shadow-xl"
-              />
+              <img src={previewImage} alt="Preview" className="object-contain rounded-lg shadow-xl" />
               <button
                 onClick={closePreview}
                 className="absolute top-2 right-2 bg-black/60 text-white p-2 rounded-full hover:bg-red-600 transition"
