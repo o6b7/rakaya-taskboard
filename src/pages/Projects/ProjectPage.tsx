@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { openTaskModal } from "../../store/slices/uiSlice";
-import { useGetProjectByIdQuery, useUpdateProjectMutation } from "../../api/projects.api";
-import { useGetTasksByProjectQuery } from "../../api/tasks.api";
+import { useDeleteProjectMutation, useGetProjectByIdQuery, useUpdateProjectMutation } from "../../api/projects.api";
+import { useDeleteTaskMutation, useGetTasksByProjectQuery } from "../../api/tasks.api";
 import BoardView from "../../components/Projects/BoardView";
 import {
   LayoutGrid,
@@ -31,6 +31,9 @@ import TaskTimelineView from "../../components/Tasks/TaskTimelineView";
 import TaskListView from "../../components/Tasks/TaskListView";
 import { useAppSelector, type RootState } from "../../store";
 import { AddProjectModal } from "../../components/Projects/AddProjectModal";
+import Swal from "sweetalert2";
+import { confirmAction, showError, showSuccess } from "../../utils/sweetAlerts";
+import { useDeleteCommentMutation } from "../../api/comments.api";
 
 export default function ProjectPage() {
   const dispatch = useDispatch();
@@ -45,6 +48,9 @@ export default function ProjectPage() {
   const { data: project, isLoading: loadingProject, refetch: refetchProject } = useGetProjectByIdQuery(projectId!);
   const { data: allUsers } = useGetAllUsersQuery();
   const { data: tasks, isLoading: loadingTasks, refetch } = useGetTasksByProjectQuery(projectId!);
+  const [deleteProject] = useDeleteProjectMutation();
+  const [deleteTask] = useDeleteTaskMutation();
+  const [deleteComment] = useDeleteCommentMutation();
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [updateProject] = useUpdateProjectMutation();
 
@@ -73,6 +79,56 @@ export default function ProjectPage() {
   const openMembersModal = (viewOnly: boolean = false) => {
     setViewOnlyMembers(viewOnly);
     setAddMembersModalOpen(true);
+  };
+
+  const handleDeleteProject = async () => {
+    if (!project) return;
+
+    const result = await confirmAction({
+      title: "Delete this project?",
+      text: "This project, its tasks, and all related comments will be permanently deleted!",
+      icon: "warning",
+      confirmText: "Yes, delete it!",
+      cancelText: "No, cancel",
+      confirmColor: "#d33",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      // 🔹 Step 1: Delete all comments related to each task
+      if (tasks?.length) {
+        for (const task of tasks) {
+          if (task.comments && task.comments.length) {
+            for (const commentId of task.comments) {
+              try {
+                await deleteComment(commentId).unwrap();
+              } catch (err) {
+                console.warn(`Failed to delete comment ${commentId}`, err);
+              }
+            }
+          }
+        }
+
+        // 🔹 Step 2: Delete all tasks in this project
+        for (const task of tasks) {
+          try {
+            await deleteTask(task.id).unwrap();
+          } catch (err) {
+            console.warn(`Failed to delete task ${task.id}`, err);
+          }
+        }
+      }
+
+      // 🔹 Step 3: Delete the project itself
+      await deleteProject(project.id).unwrap();
+
+      await showSuccess("Deleted!", "The project and all related data have been deleted.");
+      window.location.href = "/projects";
+    } catch (err) {
+      await showError("Error", "Failed to fully delete project.");
+      console.error("Delete project error:", err);
+    }
   };
 
   if (loadingProject || loadingTasks) return <div className="p-8 dark:text-dark-text">Loading...</div>;
@@ -108,29 +164,55 @@ export default function ProjectPage() {
                     {project.name}
                   </h1>
                   {isOwner && (
-                    <button
-                      onClick={() => setEditModalOpen(true)}
-                      className="group relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-card/50 transition-all duration-200"
-                      aria-label="Edit project details"
-                    >
-                      <svg
-                        className="w-4 h-4 text-gray-500 dark:text-dark-muted group-hover:text-gray-700 dark:group-hover:text-dark-text transition-colors"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                    <div className="flex items-center gap-2">
+                      {/* Edit Button */}
+                      <button
+                        onClick={() => setEditModalOpen(true)}
+                        className="group relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-card/50 transition-all duration-200"
+                        aria-label="Edit project details"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
-                      {/* Tooltip */}
-                      <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 text-xs font-medium text-white bg-gray-900 dark:bg-gray-700 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">
-                        Edit project
-                      </span>
-                    </button>
+                        <svg
+                          className="w-4 h-4 text-gray-500 dark:text-dark-muted group-hover:text-gray-700 dark:group-hover:text-dark-text transition-colors"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                          />
+                        </svg>
+                        <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 text-xs font-medium text-white bg-gray-900 dark:bg-gray-700 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">
+                          Edit project
+                        </span>
+                      </button>
+
+                      {/* Delete Button */}
+                      <button
+                        onClick={handleDeleteProject}
+                        className="group relative p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-all duration-200"
+                        aria-label="Delete project"
+                      >
+                        <svg
+                          className="w-4 h-4 text-red-500 dark:text-red-400 group-hover:text-red-700 dark:group-hover:text-red-300 transition-colors"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                        <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 text-xs font-medium text-white bg-gray-900 dark:bg-gray-700 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">
+                          Delete project
+                        </span>
+                      </button>
+                    </div>
                   )}
                 </div>
                 {/* DETAILS - VERTICAL LAYOUT */}

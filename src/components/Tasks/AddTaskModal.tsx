@@ -22,6 +22,7 @@ import {
 import type { Priority, ColumnType } from "../../types";
 import { getLucideIcon } from "../../lib/getLucideIcon";
 import Avatar from "../Common/Avatar";
+import { showError, showSuccess } from "../../utils/sweetAlerts";
 
 export default function AddTaskModal() {
   const dispatch = useDispatch();
@@ -122,14 +123,13 @@ export default function AddTaskModal() {
   };
 
   const handleSave = async () => {
-    if (!title.trim()) return toast.error("Task title is required");
-    if (!projectId) return toast.error("Please select a project");
-    if (!deadline) return toast.error("Deadline is required");
+    if (!title.trim()) return showError("Task title is required");
+    if (!projectId) return showError("Please select a project");
+    if (!deadline) return showError("Deadline is required");
 
     const now = new Date();
     const selectedDeadline = new Date(deadline);
-    if (selectedDeadline < now)
-      return toast.error("Deadline cannot be in the past");
+    if (selectedDeadline < now) return showError("Deadline cannot be in the past");
 
     const payload = {
       title,
@@ -147,17 +147,18 @@ export default function AddTaskModal() {
     try {
       if (selectedTask) {
         await updateTask({ ...selectedTask, ...payload }).unwrap();
-        toast.success("Task updated successfully");
+        showSuccess("Task updated successfully 🎉");
       } else {
         await createTask(payload).unwrap();
-        toast.success("Task added successfully");
+        showSuccess("Task added successfully ✅");
         resetFields();
       }
       dispatch(closeTaskModal());
     } catch {
-      toast.error("Failed to save task");
+      showError("Failed to save task");
     }
   };
+
 
   if (!taskModalOpen) return null;
 

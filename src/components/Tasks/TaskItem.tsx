@@ -163,7 +163,6 @@ export default function TaskItem({
 
   const handleAddCommentWrapper = async (text: string) => {
     await handleAddComment(text, () => {});
-    // No need to refetch — RTK Query should auto-refetch on mutation
   };
 
   const PriorityBadge = () => (

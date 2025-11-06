@@ -3,7 +3,7 @@ import { X, Check } from "lucide-react";
 import { useGetAllUsersQuery } from "../../api/users.api";
 import Avatar from "../Common/Avatar";
 import clsx from "clsx";
-import { confirmRemoveAttachment } from "../../utils/sweetAlerts";
+import { confirmAction, showSuccess } from "../../utils/sweetAlerts";
 import { Button } from "../ui/Button";
 import toast from "react-hot-toast";
 import { useAppSelector, type RootState } from "../../store";
@@ -56,19 +56,38 @@ export default function AddProjectMembers({
     if (viewOnly) return;
 
     // Prevent owner from removing themselves
-    if (currentMembers.includes(id) && id === currentUserId && activeProject?.ownerId === currentUserId) {
+    if (
+      currentMembers.includes(id) &&
+      id === currentUserId &&
+      activeProject?.ownerId === currentUserId
+    ) {
       toast.error("You are the project owner and cannot remove yourself.");
       return;
     }
 
+    // 🔸 If user is already a member
     if (currentMembers.includes(id)) {
       const isRemoved = removedMembers.includes(id);
-      const confirmed = await confirmRemoveAttachment(isRemoved);
-      if (!confirmed) return;
+
+      // 🧠 Reusable SweetAlert Confirmation
+      const confirmed = await confirmAction({
+        title: isRemoved
+          ? "Restore this member?"
+          : "Remove this member?",
+        text: isRemoved
+          ? "This will restore the member to the project."
+          : "This will mark the member for removal.",
+        icon: "warning",
+        confirmText: isRemoved ? "Yes, restore" : "Yes, remove",
+        cancelText: "Cancel",
+        confirmColor: isRemoved ? "#16a34a" : "#d33",
+      });
+
+      if (!confirmed.isConfirmed) return;
 
       if (!isRemoved) {
         setRemovedMembers([...removedMembers, id]);
-        toast.success("User marked for removal");
+        await showSuccess("Marked for removal", "User has been marked for removal.");
       } else {
         setRemovedMembers(removedMembers.filter((uid) => uid !== id));
         toast("Removal cancelled", { icon: "↩️" });
@@ -76,11 +95,13 @@ export default function AddProjectMembers({
       return;
     }
 
+    // 🔸 If user is being selected or deselected
     if (selectedUsers.includes(id)) {
       setSelectedUsers(selectedUsers.filter((uid) => uid !== id));
+      toast("User deselected", { icon: "❌" });
     } else {
       setSelectedUsers([...selectedUsers, id]);
-      toast.success("User selected");
+      await showSuccess("User selected", "User has been added to selection.");
     }
   };
 

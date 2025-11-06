@@ -9,6 +9,7 @@ import * as Icons from "lucide-react";
 import clsx from "clsx";
 import { useCreateProjectMutation, useUpdateProjectMutation } from "../../api/projects.api";
 import type { NewProject, Project } from "../../types";
+import { showError, showSuccess } from "../../utils/sweetAlerts";
 
 type AddProjectProps = {
   isOpen: boolean;
@@ -92,7 +93,10 @@ export const AddProjectModal: React.FC<AddProjectProps> = ({ isOpen, onClose, pr
     .slice(0, 12);
 
   const handleSubmit = async () => {
-    if (!form.name.trim()) return;
+    if (!form.name.trim()) {
+      showError("Project name is required");
+      return;
+    }
 
     const payload = {
       ...form,
@@ -108,14 +112,18 @@ export const AddProjectModal: React.FC<AddProjectProps> = ({ isOpen, onClose, pr
     try {
       if (isEdit && project) {
         await updateProject({ id: project.id, updates: payload }).unwrap();
+        showSuccess("Project updated successfully");
       } else {
         await createProject(payload as NewProject).unwrap();
+        showSuccess("Project created successfully");
       }
       onClose();
     } catch (e) {
       console.error(e);
+      showError("Failed to save project");
     }
   };
+
 
   return (
     <>

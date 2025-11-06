@@ -22,29 +22,25 @@ const LoginPage: React.FC = () => {
     dispatch(startLoading());
 
     try {
-      // Find user by email
       const user = users?.find((u) => u.email === email);
       if (!user) {
         setError("Invalid email or password.");
         return;
       }
 
-      // Compare encrypted password
       const match = await bcrypt.compare(password, user.password);
       if (!match) {
         setError("Invalid email or password.");
         return;
       }
 
-
-    const expiresAt = Date.now() + 2 * 60 * 60 * 1000; // 2h
-    const payload = { id: user.id, email: user.email, role: user.role, exp: expiresAt };
-    const token = jwtEncode(payload, import.meta.env.VITE_JWT_SECRET_KEY);
-
-
+      const expiresAt = Date.now() + 2 * 60 * 60 * 1000; // 2h
+      const payload = { id: user.id, email: user.email, role: user.role, exp: expiresAt };
+      const token = jwtEncode(payload, import.meta.env.VITE_JWT_SECRET_KEY);
 
       dispatch(setCredentials({ token, user }));
-      navigate("/projects/P1"); 
+
+      navigate("/projects/P1", { replace: true }); 
     } catch (err) {
       console.error(err);
       setError("Login failed. Please try again.");
@@ -52,6 +48,7 @@ const LoginPage: React.FC = () => {
       dispatch(stopLoading());
     }
   };
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-dark-bg px-4">

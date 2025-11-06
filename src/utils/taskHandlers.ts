@@ -10,8 +10,8 @@ import {
 } from "../api/comments.api";
 import {
   showSuccess,
-  showWarning,
-  confirmRemoveAttachment,
+  confirmAction,
+  showError,
 } from "./sweetAlerts";
 import type { Task } from "../types";
 
@@ -42,21 +42,32 @@ export const useTaskOperations = (
 
   /* ---------- Delete task (shared) ---------- */
   const deleteTaskHandler = useCallback(async () => {
-    // permission
+    // 🧠 Permission check
     if (task.creatorId !== authUser?.id && !isProjectOwner) {
       showWarning("You can only delete your own tasks");
       return;
     }
-    // confirm
-    if (!(await confirmRemoveAttachment())) return;
+
+    // 🧾 Confirmation popup
+    const confirmed = await confirmAction({
+      title: "Delete this task?",
+      text: "This action cannot be undone.",
+      icon: "warning",
+      confirmText: "Yes, delete it!",
+      cancelText: "Cancel",
+      confirmColor: "#d33",
+    });
+
+    if (!confirmed.isConfirmed) return;
 
     try {
       await deleteTask(task.id).unwrap();
-      showSuccess("Task deleted successfully");
-    } catch {
-      showWarning("Failed to delete task");
+      await showSuccess("Deleted!", "Task deleted successfully.");
+    } catch (err) {
+      await showError("Error", "Failed to delete task.");
     }
   }, [task, authUser?.id, isProjectOwner, deleteTask]);
+
 
   /* ---------- File → Base64 ---------- */
   const toBase64 = (file: File): Promise<string> =>
@@ -97,20 +108,38 @@ export const useTaskOperations = (
   const handleRemoveAttachment = useCallback(
     async (src: string) => {
       if (!isProjectMember) {
-        showWarning("No permission");
+        showError("No permission");
         return;
       }
-      if (!(await confirmRemoveAttachment())) return;
 
-      const attachments = task.attachments || [];
-      await updateTask({
-        id: task.id,
-        updates: { attachments: attachments.filter((a: string) => a !== src) },
-      }).unwrap();
-      showSuccess("Attachment removed");
+      // 🧾 SweetAlert confirmation
+      const confirmed = await confirmAction({
+        title: "Remove this attachment?",
+        text: "This action cannot be undone.",
+        icon: "warning",
+        confirmText: "Yes, remove it!",
+        cancelText: "Cancel",
+        confirmColor: "#d33",
+      });
+
+      if (!confirmed.isConfirmed) return;
+
+      try {
+        const attachments = task.attachments || [];
+        await updateTask({
+          id: task.id,
+          updates: { attachments: attachments.filter((a: string) => a !== src) },
+        }).unwrap();
+
+        await showSuccess("Attachment removed", "The file has been successfully removed.");
+      } catch (err) {
+        await showError("Error", "Failed to remove attachment.");
+        console.error("Attachment removal error:", err);
+      }
     },
     [task.id, task.attachments, isProjectMember, updateTask]
   );
+
 
   /* ---------- Add comment ---------- */
   const handleAddComment = useCallback(
@@ -129,7 +158,7 @@ export const useTaskOperations = (
         showSuccess("Comment added");
         refetch();
       } catch {
-        showWarning("Failed to post comment");
+        showError("Failed to post comment");
       }
     },
     [task.id, authUser.id, createComment, refetch]
@@ -140,17 +169,29 @@ export const useTaskOperations = (
     async (id: string, uid: string) => {
       const canDelete = uid === authUser?.id || isProjectOwner;
       if (!canDelete) {
-        showWarning("You can only delete your comments");
+        showError("You can only delete your own comments");
         return;
       }
-      if (!(await confirmRemoveAttachment())) return;
+
+      // 🧾 SweetAlert confirmation
+      const confirmed = await confirmAction({
+        title: "Delete this comment?",
+        text: "This action cannot be undone.",
+        icon: "warning",
+        confirmText: "Yes, delete it",
+        cancelText: "Cancel",
+        confirmColor: "#d33",
+      });
+
+      if (!confirmed.isConfirmed) return;
 
       try {
         await deleteComment(id).unwrap();
-        showSuccess("Comment deleted");
+        await showSuccess("Comment deleted", "The comment has been successfully removed.");
         refetch();
-      } catch {
-        showWarning("Failed to delete comment");
+      } catch (err) {
+        await showError("Error", "Failed to delete comment.");
+        console.error("Comment deletion error:", err);
       }
     },
     [authUser?.id, isProjectOwner, deleteComment, refetch]

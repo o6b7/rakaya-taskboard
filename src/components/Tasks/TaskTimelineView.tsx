@@ -1,3 +1,4 @@
+"use client";
 import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { Gantt, ViewMode, type Task as GanttTask } from "gantt-task-react";
 import "gantt-task-react/dist/index.css";
@@ -7,6 +8,8 @@ import { useAppSelector } from "../../store";
 import { differenceInDays } from "date-fns";
 import { Clock, Pin, Calendar, Loader2 } from "lucide-react";
 import type { Task } from "../../types";
+import { getLucideIcon } from "../../lib/getLucideIcon";
+import { motion } from "framer-motion";
 
 const VIEW_MODES = [
   { mode: ViewMode.Day, label: "Day" },
@@ -164,7 +167,7 @@ export default function TaskTimelineView() {
   }
 
   return (
-    <div className="space-y-6  mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ml-2">
       {/* Controls */}
       <div
         className={`bg-white dark:bg-dark-surface rounded-xl shadow-sm dark:shadow-card-dark border dark:border-dark-border p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 ${
@@ -190,7 +193,7 @@ export default function TaskTimelineView() {
         </div>
 
         {/* Stats */}
-        <div className="flex items-center justify-center md:justify-end gap-4 bg-gray-100 p-3 rounded-md text-sm text-gray-600 dark:text-dark-muted dark:bg-dark-border w-full md:w-auto">
+        <div className="flex items-center justify-center md:justify-end gap-4 bg-gray-100 p-3 rounded-md text-sm text-gray-600 dark:text-dark-muted dark:bg-da w-full md:w-auto">
           <span className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-blue-500" />
             {tasks.length} tasks
@@ -215,15 +218,17 @@ export default function TaskTimelineView() {
           }}
         >
           {tasks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="mb-4 opacity-60">
-                <Calendar className="w-16 h-16 text-gray-400 dark:text-dark-muted" />
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center justify-center py-24 text-center dark:text-white"
+            >
+              <div className="mb-5 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 p-5 dark:from-gray-800 dark:to-gray-900">
+                {getLucideIcon("ClipboardList", { className: "h-12 w-12 text-gray-400 dark:text-gray-600" })}
               </div>
-              <h3 className="text-lg font-semibold text-gray-700 dark:text-dark-text">No tasks yet</h3>
-              <p className="text-sm text-gray-500 dark:text-dark-muted mt-1">
-                Add tasks with deadlines to see the timeline.
-              </p>
-            </div>
+              <h3 className="mb-1 text-lg font-semibold text-foreground">No tasks found</h3>
+              <p className="text-sm text-muted-foreground">Try adjusting your filters or create a new task.</p>
+            </motion.div>
           ) : (
             <Gantt
               key={`${viewMode}-${colWidth}-${isSmallScreen}`}

@@ -8,6 +8,11 @@ import type { RootState } from "../../store";
 import { motion, AnimatePresence } from "framer-motion";
 import TaskItem from "./TaskItem";
 import type { User } from "../../types";
+import { getLucideIcon } from "../../lib/getLucideIcon";
+
+interface TaskListViewProps {
+  projectId: string;
+}
 
 export default function TaskTableView({ projectId }: TaskTableViewProps) {
   const { data: tasks = [], isLoading } = useGetTasksByProjectQuery(projectId);
@@ -50,7 +55,7 @@ export default function TaskTableView({ projectId }: TaskTableViewProps) {
   return (
     <>
       {/* Mobile: Fixed width + horizontal scroll */}
-      <div className="sm:hidden w-64 mx-auto overflow-x-auto rounded-2xl bg-white dark:bg-dark-surface shadow-lg border border-gray-200 dark:border-dark-border">
+      <div className="sm:hidden w-80 mx-auto overflow-x-auto rounded-2xl bg-white dark:bg-dark-surface dark:border-dark-border">
         <div className="min-w-[640px]"> {/* Forces horizontal scroll */}
           <table className="w-full table-auto border-collapse">
             <thead>
@@ -108,7 +113,7 @@ export default function TaskTableView({ projectId }: TaskTableViewProps) {
       </div>
 
       {/* Desktop: Full width */}
-      <div className="hidden sm:block w-full overflow-x-auto rounded-2xl bg-white dark:bg-dark-surface shadow-lg border border-gray-200 dark:border-dark-border">
+      <div className="hidden sm:block w-full overflow-x-auto rounded-2xl bg-white dark:bg-dark-surface dark:border-dark-border">
         <table className="w-full table-auto border-collapse">
           <thead>
             <tr className="border-b border-surface-border dark:border-dark-border bg-gray-50 dark:bg-dark-card">
@@ -133,13 +138,17 @@ export default function TaskTableView({ projectId }: TaskTableViewProps) {
             {filteredTasks.length === 0 ? (
               <tr>
                 <td colSpan={6} className="text-center py-12 text-gray-500 dark:text-dark-muted">
-                  <div className="flex flex-col items-center">
-                    <svg className="w-12 h-12 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <p className="text-sm font-medium">No tasks found</p>
-                    <p className="text-xs opacity-75 mt-1">Create your first task to get started</p>
-                  </div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex flex-col items-center justify-center py-24 text-center dark:text-white"
+                  >
+                    <div className="mb-5 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 p-5 dark:from-gray-800 dark:to-gray-900">
+                      {getLucideIcon("ClipboardList", { className: "h-12 w-12 text-gray-400 dark:text-gray-600" })}
+                    </div>
+                    <h3 className="mb-1 text-lg font-semibold text-foreground">No tasks found</h3>
+                    <p className="text-sm text-muted-foreground">Try adjusting your filters or create a new task.</p>
+                  </motion.div>
                 </td>
               </tr>
             ) : (
