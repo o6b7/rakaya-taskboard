@@ -88,6 +88,18 @@ export default function ProjectPage() {
 
                 {/* DETAILS - VERTICAL LAYOUT */}
                 <div className="space-y-4 text-sm text-gray-700 dark:text-dark-text">
+                  {/* DESCRIPTION - Added under project name */}
+<div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3">
+  <div className="flex items-center gap-2 text-gray-500 dark:text-dark-muted sm:min-w-[120px]">
+    {getLucideIcon("FileText", { className: "w-5 h-5" })}
+    <span>Description</span>
+  </div>
+  <p className="font-medium text-gray-700 dark:text-dark-text max-w-3xl">
+    {project.description || (
+      <span className="text-gray-400 dark:text-dark-muted italic">No description</span>
+    )}
+  </p>
+</div>
                   {/* VISIBILITY */}
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                     <div className="flex items-center gap-2 text-gray-500 dark:text-dark-muted sm:min-w-[120px]">

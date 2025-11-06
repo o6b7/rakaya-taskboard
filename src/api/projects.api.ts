@@ -10,7 +10,6 @@ export const projectsApi = createApi({
   endpoints: (builder) => ({
     getProjects: builder.query<Project[], void>({
       query: () => {
-        console.log('🔍 [getProjects] Building query...');
         return "/projects";
       },
       providesTags: ["Project"],
@@ -18,7 +17,6 @@ export const projectsApi = createApi({
 
     getProjectById: builder.query<Project, string>({
       query: (id) => {
-        console.log('🔍 [getProjectById] Building query for ID:', id);
         return `/projects/${id}`;
       },
       providesTags: ["Project"],
@@ -26,7 +24,6 @@ export const projectsApi = createApi({
 
     createProject: builder.mutation<Project, NewProject>({
       query: (newProject) => {
-        console.log('🔍 [createProject] Building mutation with data:', newProject);
         return {
           url: "/projects",
           method: "POST",
@@ -38,7 +35,6 @@ export const projectsApi = createApi({
 
     updateProject: builder.mutation<Project, { id: string; updates: Partial<Project> }>({
       query: ({ id, updates }) => {
-        console.log('🔍 [updateProject] Building mutation for ID:', id);
         return {
           url: `/projects/${id}`,
           method: "PATCH",
@@ -50,7 +46,6 @@ export const projectsApi = createApi({
 
     deleteProject: builder.mutation<void, string>({
       query: (id) => {
-        console.log('🔍 [deleteProject] Building mutation for ID:', id);
         return {
           url: `/projects/${id}`,
           method: "DELETE",

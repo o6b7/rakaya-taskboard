@@ -41,6 +41,7 @@
     "react-dnd-touch-backend": "^16.0.1",
     "react-dom": "^19.1.1",
     "react-gantt-timeline": "^0.4.3",
+    "react-hot-toast": "^2.6.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.9.5",
     "react-select": "^5.10.2",
