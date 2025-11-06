@@ -434,6 +434,7 @@ export default function ProjectPage() {
 
             {/* VIEW TABS + ADD TASK BUTTON */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 pb-3 gap-3 sm:gap-4">
+              {/* Tabs */}
               <div className="flex w-full text-sm overflow-x-auto">
                 {[
                   { name: "Board", icon: LayoutGrid },
@@ -443,24 +444,28 @@ export default function ProjectPage() {
                 ].map((tab) => {
                   const Icon = tab.icon;
                   const isActive = activeTab === tab.name;
+
                   return (
                     <Button
                       key={tab.name}
                       variant="ghost"
                       onClick={() => setActiveTab(tab.name)}
-                      className={`relative flex-1 justify-center p-3 sm:p-4 min-w-[80px] ${
-                        isActive
-                          ? "text-blue-600 font-medium after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-[2px] after:bg-blue-500"
-                          : "text-gray-500 hover:text-gray-800"
-                      }`}
+                      className={`relative flex-1 justify-center p-3 sm:p-4 min-w-[80px]
+                        ${
+                          isActive
+                            ? "text-blue-600 font-medium after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-[2px] after:bg-blue-500"
+                            : "text-gray-500 hover:text-gray-800"
+                        }`}
                     >
                       <Icon className="w-4 h-4 mr-2" />
                       <span className="hidden sm:inline">{tab.name}</span>
                     </Button>
+
                   );
                 })}
               </div>
-
+              <div style={{width: "60%"}}></div>
+              {/* Add Task Button */}
               <Button
                 variant="primary"
                 icon
@@ -469,6 +474,7 @@ export default function ProjectPage() {
               >
                 Add new task
               </Button>
+
             </div>
 
             {/* TAB CONTENT AREA */}

@@ -719,20 +719,6 @@
       "createdAt": "2024-06-08T13:10:00Z"
     },
     {
-      "id": "ff74",
-      "taskId": "T2",
-      "userId": "1",
-      "content": "UMM",
-      "createdAt": "2025-11-04T21:19:33.640Z"
-    },
-    {
-      "id": "830e",
-      "taskId": null,
-      "userId": "1",
-      "content": "wow",
-      "createdAt": "2025-11-04T21:29:04.930Z"
-    },
-    {
       "id": "1709",
       "taskId": "c22c",
       "userId": "1",
@@ -752,20 +738,6 @@
       "userId": "demo-user",
       "content": "D",
       "createdAt": "2025-11-05T16:41:13.974Z"
-    },
-    {
-      "id": "55d5",
-      "taskId": "T11",
-      "userId": "demo-user",
-      "content": "S",
-      "createdAt": "2025-11-05T16:50:51.723Z"
-    },
-    {
-      "id": "9477",
-      "taskId": null,
-      "userId": "demo-user",
-      "content": "a",
-      "createdAt": "2025-11-05T19:18:28.817Z"
     },
     {
       "id": "be04",

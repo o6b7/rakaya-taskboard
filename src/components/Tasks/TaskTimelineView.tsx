@@ -164,7 +164,7 @@ export default function TaskTimelineView() {
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="space-y-6  mx-auto px-4 sm:px-6 lg:px-8">
       {/* Controls */}
       <div
         className={`bg-white dark:bg-dark-surface rounded-xl shadow-sm dark:shadow-card-dark border dark:border-dark-border p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 ${
