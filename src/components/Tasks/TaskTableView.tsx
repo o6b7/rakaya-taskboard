@@ -99,7 +99,7 @@ export default function TaskTableView({ projectId }: TaskTableViewProps) {
   };
 
   return (
-    <div className="rounded-2xl border border-gray-200 dark:border-dark-border shadow-card bg-white dark:bg-dark-surface">
+    <div className="rounded-2xl dark:border-dark-border bg-white dark:bg-transparent">
       <div className="flex flex-wrap items-center justify-between gap-3 p-4 border-b dark:border-dark-border">
         <h2 className="text-lg font-semibold dark:text-dark-text">Tasks</h2>
         <select

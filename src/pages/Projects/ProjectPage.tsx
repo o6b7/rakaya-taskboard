@@ -20,6 +20,7 @@ import AddMembersModal from "../../components/Projects/AddProjectMembers";
 import { getLucideIcon } from "../../lib/getLucideIcon";
 import AddTaskModal from "../../components/Tasks/AddTaskModal";
 import TaskTableView from "../../components/Tasks/TaskTableView";
+import TaskTimelineView from "../../components/Tasks/TaskTimelineView";
 
 export default function ProjectPage() {
   const dispatch = useDispatch();
@@ -440,7 +441,7 @@ export default function ProjectPage() {
               )}
 
               {activeTab === "Timeline" && (
-                <BoardView projectId={project.id} />
+                <TaskTimelineView />
               )}
 
               {activeTab === "Table" && (

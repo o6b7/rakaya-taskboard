@@ -1,0 +1,25 @@
+/*  gantt-task-react internal classes  */
+.dark .gantt-container .gantt-vertical-container,
+.dark .gantt-container .gantt-horizontal-container,
+.dark .gantt-container .gantt-grid,
+.dark .gantt-container .gantt-task-background,
+.dark .gantt-container .gantt-task-line {
+  background: #1a1d21 !important;   /* dark-surface */
+}
+
+/* header row (date columns) */
+.dark .gantt-container .gantt-header,
+.dark .gantt-container .gantt-header-row {
+  background: #202327 !important;   /* dark-card */
+  color: #e5e7eb !important;        /* dark-text */
+}
+
+/* vertical divider */
+.dark .gantt-container .gantt-vertical-container .gantt-divider {
+  border-left: 1px solid #2a2e33 !important;   /* dark-border */
+}
+
+/* today line */
+.dark .gantt-container .gantt-today {
+  background: #f59e0b !important;
+}
