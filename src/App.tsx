@@ -6,6 +6,7 @@ import ProjectPage from "./pages/Projects/ProjectPage";
 import LoginPage from "./pages/Auth/Login";
 import { validateToken } from "./lib/authorizedBaseQuery";
 import Layout from "./components/Layout/Layout";
+import { Toaster } from "react-hot-toast";
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
@@ -26,11 +27,11 @@ const App: React.FC = () => {
 
   return (
     <Router>
+      <Toaster position="top-center" toastOptions={{ style: { background: '#363636', color: '#fff' } }}/>
       <Routes>
-        {/* Public Route */}
+        
         <Route path="/login" element={<LoginPage />} />
 
-        {/* Private Routes (Layout auto-applied) */}
         <Route
           path="/projects/:projectId"
           element={

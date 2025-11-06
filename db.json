@@ -121,7 +121,7 @@
         "U1",
         "U2"
       ],
-      "column": "backlog",
+      "column": "inprogress",
       "createdAt": "2024-05-28T11:45:00Z",
       "deadline": "2024-06-12T23:59:59Z",
       "projectId": "P1",
@@ -395,7 +395,7 @@
       "iconName": "Smartphone",
       "createdAt": "2024-06-01T12:00:00Z",
       "deadline": "2024-08-01T23:59:59Z",
-      "ownerId": "U1",
+      "ownerId": "U1762195789176",
       "visibility": "public",
       "tags": [
         "backend",
@@ -565,6 +565,22 @@
       "createdAt": "2025-11-06T17:12:31.064Z",
       "members": [
         "U1762195789176"
+      ]
+    },
+    {
+      "id": "53fb",
+      "name": "x",
+      "description": "x",
+      "iconName": "AArrowUp",
+      "deadline": "2025-11-20",
+      "visibility": "public",
+      "tags": [],
+      "ownerId": "U1762195789176",
+      "createdAt": "2025-11-06T17:36:47.148Z",
+      "members": [
+        "U1762195789176",
+        "U6",
+        "U1762195818273"
       ]
     }
   ],

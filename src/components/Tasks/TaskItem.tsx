@@ -54,8 +54,8 @@ const CommentItem = memo(({ comment, authUser, isProjectOwner, getUserById, hand
       className="flex gap-3 p-3 bg-card border border-border rounded-xl text-sm shadow-sm hover:shadow transition-shadow"
     >
       <Avatar name={commenter?.name} avatar={commenter?.avatar} size={36} />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between mb-1">
+      <div className="flex-1 min-w-0 dark:text-white">
+        <div className="flex items-center justify-between mb-1 ">
           <p className="font-semibold text-sm">{commenter?.name || "User"}</p>
           <span className="text-xs text-muted-foreground">
             {format(new Date(comment.createdAt), "MMM dd, h:mm a5")}
@@ -115,7 +115,7 @@ const CommentInput = ({ onAddComment }: { onAddComment: (text: string) => Promis
           }
         }}
         placeholder="Write a comment... (Shift+Enter for new line)"
-        className="flex-1 min-h-10 max-h-32 text-sm resize-none border border-input rounded-xl px-3 py-2.5 bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all overflow-hidden field-sizing-content"
+        className="flex-1 min-h-10 max-h-32 text-sm resize-none dark:bg-dark-border border border-input rounded-xl px-3 py-2.5 bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all overflow-hidden field-sizing-content"
         style={{ fieldSizing: "content" }}
         rows={1}
       />
@@ -174,7 +174,7 @@ export default function TaskItem({
   );
 
   const ActionButtons = () => (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1.5 dark:text-white">
       {(authUser?.id === task.creatorId || isProjectOwner) && (
         <button
           onClick={deleteTaskHandler}
@@ -225,7 +225,7 @@ export default function TaskItem({
   );
 
   const AttachmentsSection = () => (
-    <div className="space-y-4">
+    <div className="space-y-4 dark:text-white">
       <div className="flex items-center gap-2">
         {getLucideIcon("Paperclip", { className: "h-4 w-4 text-muted-foreground" })}
         <h4 className="text-sm font-semibold">Attachments ({attachments.length})</h4>
@@ -277,7 +277,7 @@ export default function TaskItem({
   );
 
   const CommentsSection = () => (
-    <div className="space-y-4">
+    <div className="space-y-4 dark:text-white">
       <div className="flex items-center gap-2">
         {getLucideIcon("MessageSquare", { className: "h-4 w-4 text-muted-foreground" })}
         <h4 className="text-sm font-semibold">Comments ({comments.length})</h4>
@@ -321,7 +321,7 @@ export default function TaskItem({
         exit={{ opacity: 0, scale: 0.98 }}
         className="group relative overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm hover:shadow-xl transition-all duration-300"
       >
-        <div className="p-6 pb-4">
+        <div className="p-6 pb-4 dark:text-white">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 space-y-4">
               <div className="flex items-center gap-2">
@@ -409,7 +409,7 @@ export default function TaskItem({
   // TABLE VIEW
   return (
     <>
-      <tr className="group hover:bg-muted/50 transition-colors duration-200">
+      <tr className="group hover:bg-muted/50 transition-colors duration-200 dark:text-white">
         <td className="px-6 py-4">
           <div className="flex items-start gap-3">
             <div className="w-6 h-6 flex items-center justify-center mt-0.5">

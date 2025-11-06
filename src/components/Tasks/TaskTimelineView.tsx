@@ -168,7 +168,7 @@ export default function TaskTimelineView() {
       {/* Controls */}
       <div
         className={`bg-white dark:bg-dark-surface rounded-xl shadow-sm dark:shadow-card-dark border dark:border-dark-border p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 ${
-          isSmallScreen ? "w-72" : "w-full"
+          isSmallScreen ? "w-64" : "w-full"
         }`}
       >
         {/* View Mode Switch */}
@@ -190,7 +190,7 @@ export default function TaskTimelineView() {
         </div>
 
         {/* Stats */}
-        <div className="flex items-center justify-center md:justify-end gap-4 bg-gray-100 p-3 rounded-md text-sm text-gray-600 dark:text-dark-muted dark:bg-da w-full md:w-auto">
+        <div className="flex items-center justify-center md:justify-end gap-4 bg-gray-100 p-3 rounded-md text-sm text-gray-600 dark:text-dark-muted dark:bg-dark-border w-full md:w-auto">
           <span className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-blue-500" />
             {tasks.length} tasks
@@ -203,7 +203,7 @@ export default function TaskTimelineView() {
       </div>
 
       {/* Gantt Chart */}
-      <section className={isSmallScreen ? "w-72" : "w-full"}>
+      <section className={isSmallScreen ? "w-64" : "w-full"}>
         <div
           ref={ganttContainerRef}
           className="bg-white dark:bg-dark-surface rounded-2xl shadow-sm dark:shadow-card-dark border border-gray-200 dark:border-dark-border overflow-hidden"
