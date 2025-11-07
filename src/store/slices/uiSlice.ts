@@ -6,12 +6,12 @@ interface UISliceState {
   notificationOpen: boolean;
   toastMessage: string | null;
   toastType: "success" | "error" | "warning" | "info" | null;
-  taskModalOpen: boolean,
-  selectedTask: any,
+  taskModalOpen: boolean;
+  selectedTask: any;
 }
 
 const initialState: UISliceState = {
-  sidebarOpen: true,
+  sidebarOpen: false,
   darkMode: localStorage.getItem("darkMode") === "true",
   notificationOpen: false,
   toastMessage: null,
@@ -27,6 +27,9 @@ const uiSlice = createSlice({
     toggleSidebar: (state) => {
       state.sidebarOpen = !state.sidebarOpen;
     },
+    setSidebarOpen: (state, action: PayloadAction<boolean>) => {
+      state.sidebarOpen = action.payload;
+    },
     toggleDarkMode: (state) => {
       state.darkMode = !state.darkMode;
       localStorage.setItem("darkMode", state.darkMode.toString());
@@ -41,7 +44,13 @@ const uiSlice = createSlice({
           ? action.payload
           : !state.notificationOpen;
     },
-    showToast: (state, action: PayloadAction<{ message: string; type: "success" | "error" | "warning" | "info" }>) => {
+    showToast: (
+      state,
+      action: PayloadAction<{
+        message: string;
+        type: "success" | "error" | "warning" | "info";
+      }>
+    ) => {
       state.toastMessage = action.payload.message;
       state.toastType = action.payload.type;
     },
@@ -57,20 +66,19 @@ const uiSlice = createSlice({
       state.taskModalOpen = false;
       state.selectedTask = null;
     },
-
   },
-  
 });
 
-
-export const { 
-  toggleSidebar, 
-  toggleDarkMode, 
+export const {
+  toggleSidebar,
+  setSidebarOpen, // ← NEW: allows setting sidebar state directly
+  toggleDarkMode,
   setDarkMode,
-  toggleNotification, 
+  toggleNotification,
   showToast,
   clearToast,
   openTaskModal,
   closeTaskModal,
 } = uiSlice.actions;
+
 export default uiSlice.reducer;

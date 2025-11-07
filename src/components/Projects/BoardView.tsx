@@ -128,18 +128,13 @@ export default function BoardView({ projectId }: BoardViewProps) {
             })}
           </div>
         </section>
-
-        {isLoading && (
-          <div className="mt-4 text-sm text-gray-500 dark:text-dark-muted text-center">
-            Loading tasks…
-          </div>
+        { 
+          tasks.length === 0 && (
+            <div className="mt-4 text-sm text-gray-500 dark:text-dark-muted text-center">
+              No tasks found for this project.
+            </div>
         )}
 
-        {isError && (
-          <div className="mt-4 text-sm text-red-600 text-center">
-            Failed to load tasks from API.
-          </div>
-        )}
       </div>
     </DndProvider>
   );

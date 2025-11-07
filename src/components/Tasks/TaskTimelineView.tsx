@@ -170,7 +170,7 @@ export default function TaskTimelineView() {
       {/* Controls */}
       <div
         className={`bg-white dark:bg-dark-surface rounded-xl shadow-sm dark:shadow-card-dark border dark:border-dark-border p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 ${
-          isSmallScreen ? "w-64" : "w-full"
+          isSmallScreen ? "w-64" : "w-full ml-0"
         }`}
       >
         {/* View Mode Switch */}

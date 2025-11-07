@@ -20,6 +20,7 @@ import { ChevronDown } from 'lucide-react';
 import { useAppSelector } from '../../store';
 import { useGetProjectsQuery } from '../../api/projects.api';
 import { useGetTasksQuery } from '../../api/tasks.api';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
@@ -123,32 +124,53 @@ const HomePage: React.FC = () => {
 
   if (isProjectsLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex h-screen items-center justify-center"
+      >
         <p className="text-lg text-gray-600 dark:text-gray-300">Loading projects...</p>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg px-4 py-8 sm:px-6 lg:px-8">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+      className="min-h-screen bg-gray-50 dark:bg-dark-bg px-4 py-8 sm:px-6 lg:px-8"
+    >
       <div className="mx-auto max-w-7xl">
         {/* Header */}
-        <div className="mb-8">
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="mb-8"
+        >
           <h1 className="text-2xl font-bold text-gray-900 dark:text-dark-text sm:text-3xl">
             Project Dashboard
           </h1>
           <p className="mt-1 text-sm text-gray-600 dark:text-dark-muted">
             Analytics and insights for your tasks and projects
           </p>
-        </div>
+        </motion.div>
 
         {/* Project Selector */}
-        <div className="mb-8">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="mb-8"
+        >
           <label htmlFor="project-select" className="block text-sm font-medium text-gray-700 dark:text-dark-text mb-2">
             Select Project
           </label>
           <div className="relative max-w-full">
-            <select
+            <motion.select
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               id="project-select"
               value={selectedProjectId}
               onChange={(e) => setSelectedProjectId(e.target.value)}
@@ -160,15 +182,20 @@ const HomePage: React.FC = () => {
                   {project.name}
                 </option>
               ))}
-            </select>
+            </motion.select>
             <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 dark:text-dark-muted" />
           </div>
-        </div>
+        </motion.div>
 
         {/* Charts Grid */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Priority Distribution */}
-          <div className="rounded-xl bg-white p-6 shadow-card dark:bg-dark-card dark:shadow-card-dark">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+            className="rounded-xl bg-white p-6 shadow-card dark:bg-dark-card dark:shadow-card-dark"
+          >
             <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-dark-text">
               Task Distribution by Priority — {selectedProjectName}
             </h3>
@@ -202,10 +229,15 @@ const HomePage: React.FC = () => {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-          </div>
+          </motion.div>
 
           {/* Status Distribution */}
-          <div className="rounded-xl bg-white p-6 shadow-card dark:bg-dark-card dark:shadow-card-dark">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.35 }}
+            className="rounded-xl bg-white p-6 shadow-card dark:bg-dark-card dark:shadow-card-dark"
+          >
             <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-dark-text">
               Task Distribution by Status — {selectedProjectName}
             </h3>
@@ -237,10 +269,15 @@ const HomePage: React.FC = () => {
                 <Legend wrapperStyle={{ color: textColor }} />
               </PieChart>
             </ResponsiveContainer>
-          </div>
+          </motion.div>
 
           {/* Monthly Task Trend */}
-          <div className="rounded-xl bg-white p-6 shadow-card dark:bg-dark-card dark:shadow-card-dark lg:col-span-2">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.4 }}
+            className="rounded-xl bg-white p-6 shadow-card dark:bg-dark-card dark:shadow-card-dark lg:col-span-2"
+          >
             <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-dark-text">
               Tasks Assigned Per Month — {selectedProjectName}
             </h3>
@@ -275,10 +312,10 @@ const HomePage: React.FC = () => {
                 />
               </LineChart>
             </ResponsiveContainer>
-          </div>
+          </motion.div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

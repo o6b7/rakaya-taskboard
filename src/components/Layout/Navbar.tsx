@@ -59,12 +59,12 @@ const Navbar = () => {
     month: "long",
   });
 
-  // ✅ Dark mode toggle effect
+  // Dark mode toggle effect
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
   }, [darkMode]);
 
-  // ✅ Close profile/notifications when clicking outside
+  // Close profile/notifications when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -99,19 +99,29 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="relative flex items-center justify-between px-4 sm:px-6 py-3 bg-white dark:bg-dark-surface border-b border-surface-border dark:border-dark-border transition-colors duration-300">
+    <motion.nav
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.4 }}
+      className="relative flex items-center justify-between px-4 sm:px-6 py-3 bg-white dark:bg-dark-surface border-b border-surface-border dark:border-dark-border transition-colors duration-300"
+    >
       {/* Left */}
       <div className="flex items-center gap-3 flex-1">
-        <button
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
           className="sm:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-card transition"
           onClick={() => dispatch(toggleSidebar())}
         >
           {getLucideIcon("Menu", { className: "w-5 h-5 text-gray-600 dark:text-gray-300" })}
-        </button>
+        </motion.button>
 
         <div className="flex items-center flex-1 max-w-2xl relative">
           {getLucideIcon("Search", { className: "absolute left-3 top-2.5 w-5 h-5 text-gray-400" })}
-          <input
+          <motion.input
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
             type="text"
             placeholder="Search by name, label, task or team member..."
             className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-gray-50 dark:bg-dark-card border border-gray-200 dark:border-dark-border text-sm text-gray-700 dark:text-dark-text placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition"
@@ -122,40 +132,46 @@ const Navbar = () => {
       {/* Right */}
       <div className="flex items-center gap-4 ml-6 relative">
         {/* Dark Mode */}
-        <button
+        <motion.button
+          whileHover={{ scale: 1.1, rotate: 15 }}
+          whileTap={{ scale: 0.9 }}
           onClick={() => dispatch(toggleDarkMode())}
           className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-card transition"
         >
           {darkMode
             ? getLucideIcon("Sun", { className: "w-5 h-5 text-yellow-400" })
             : getLucideIcon("Moon", { className: "w-5 h-5 text-gray-500 dark:text-dark-muted" })}
-        </button>
+        </motion.button>
 
-        {/* 📧 Mail with Tooltip */}
-        <div
+        {/* Mail with Tooltip */}
+        <motion.div
           className="relative"
           onMouseEnter={() => setShowTooltip(true)}
           onMouseLeave={() => setShowTooltip(false)}
         >
-          <button className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-card transition">
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-card transition"
+          >
             {getLucideIcon("Mail", { className: "w-5 h-5 text-gray-500 dark:text-dark-muted" })}
-          </button>
+          </motion.button>
           <AnimatePresence>
             {showTooltip && (
               <motion.div
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 5 }}
+                initial={{ opacity: 0, y: 5, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 5, scale: 0.9 }}
                 transition={{ duration: 0.2 }}
                 className="absolute left-1/2 -translate-x-1/2 mt-2 bg-gray-800 text-white text-xs px-3 py-1 rounded-md shadow-lg whitespace-nowrap"
               >
-                💬 Chatting will come soon
+                Chatting will come soon
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+        </motion.div>
 
-        {/* 🔔 Notifications */}
+        {/* Notifications */}
         <div className="relative" ref={notificationsRef}>
           <button
             onClick={() => {
@@ -213,34 +229,38 @@ const Navbar = () => {
           </AnimatePresence>
         </div>
 
-        {/* 👤 Profile */}
-        <div
+        {/* Profile */}
+        <motion.div
           ref={profileRef}
           className="flex items-center gap-2 cursor-pointer select-none"
           onClick={() => {
             setOpenProfile((prev) => !prev);
             setOpenNotifications(false);
           }}
+          whileHover={{ scale: 1.03 }}
         >
           <Avatar name={name} avatar={avatar} size={36} />
           <span className="hidden sm:inline text-sm font-medium text-gray-800 dark:text-dark-text">
             {name}
           </span>
-          {getLucideIcon("ChevronDown", {
-            className: `w-4 h-4 text-gray-500 dark:text-dark-muted transition-transform duration-300 ${
-              openProfile ? "rotate-180" : ""
-            }`,
-          })}
-        </div>
+          <motion.div
+            animate={{ rotate: openProfile ? 180 : 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {getLucideIcon("ChevronDown", {
+              className: "w-4 h-4 text-gray-500 dark:text-dark-muted",
+            })}
+          </motion.div>
+        </motion.div>
 
         {/* Profile Dropdown */}
         <AnimatePresence>
           {openProfile && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.25 }}
+              initial={{ opacity: 0, y: -15, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -15, scale: 0.95 }}
+              transition={{ duration: 0.25, type: "spring", stiffness: 300 }}
               className="absolute right-0 top-12 w-72 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-lg p-4 z-50"
             >
               <div className="flex items-center gap-3 mb-3">
@@ -300,7 +320,7 @@ const Navbar = () => {
           )}
         </AnimatePresence>
       </div>
-    </nav>
+    </motion.nav>
   );
 };
 

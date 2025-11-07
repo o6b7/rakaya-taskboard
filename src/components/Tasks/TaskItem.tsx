@@ -41,46 +41,66 @@ const statusConfig = {
 
 const statusOptions = Object.entries(statusConfig).map(([value, { label }]) => ({ value, label }));
 
-// === MEMOIZED COMMENT ITEM ===
+// MEMOIZED COMMENT ITEM
 const CommentItem = memo(({ comment, authUser, isProjectOwner, getUserById, handleDeleteComment }: any) => {
   const commenter = getUserById(comment.userId);
   const canDelete = comment.userId === authUser?.id || isProjectOwner;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
+      layout
+      initial={{ opacity: 0, y: 12, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -12, scale: 0.95 }}
+      transition={{ type: "spring", stiffness: 400, damping: 30 }}
       className="flex gap-3 p-3 bg-card border border-border rounded-xl text-sm shadow-sm hover:shadow transition-shadow"
     >
-      <Avatar name={commenter?.name} avatar={commenter?.avatar} size={36} />
+      <motion.div
+        whileHover={{ scale: 1.1 }}
+        transition={{ type: "spring", stiffness: 500 }}
+      >
+        <Avatar name={commenter?.name} avatar={commenter?.avatar} size={36} />
+      </motion.div>
       <div className="flex-1 min-w-0 dark:text-white">
-        <div className="flex items-center justify-between mb-1 ">
+        <div className="flex items-center justify-between mb-1">
           <p className="font-semibold text-sm">{commenter?.name || "User"}</p>
-          <span className="text-xs text-muted-foreground">
-            {format(new Date(comment.createdAt), "MMM dd, h:mm a5")}
-          </span>
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="text-xs text-muted-foreground"
+          >
+            {format(new Date(comment.createdAt), "MMM dd, h:mm a")}
+          </motion.span>
         </div>
-        <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{comment.content}</p>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15 }}
+          className="text-sm text-foreground leading-relaxed whitespace-pre-wrap"
+        >
+          {comment.content}
+        </motion.p>
       </div>
       {canDelete && (
-        <button
+        <motion.button
+          whileHover={{ scale: 1.2, rotate: 90 }}
+          whileTap={{ scale: 0.9 }}
           onClick={() => handleDeleteComment(comment.id, comment.userId)}
           className="text-red-600 hover:text-red-700 p-1.5 rounded-lg transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
         >
           {getLucideIcon("Trash2", { size: 14 })}
-        </button>
+        </motion.button>
       )}
     </motion.div>
   );
 });
 
-// === SEPARATE COMMENT INPUT COMPONENT (isolated re-renders) ===
+// SEPARATE COMMENT INPUT COMPONENT
 const CommentInput = ({ onAddComment }: { onAddComment: (text: string) => Promise<void> }) => {
   const [commentText, setCommentText] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-resize with minimal re-render impact
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
@@ -103,8 +123,12 @@ const CommentInput = ({ onAddComment }: { onAddComment: (text: string) => Promis
   };
 
   return (
-    <div className="flex gap-2 pt-3">
-      <textarea
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex gap-2 pt-3"
+    >
+      <motion.textarea
         ref={textareaRef}
         value={commentText}
         onChange={(e) => setCommentText(e.target.value)}
@@ -118,16 +142,20 @@ const CommentInput = ({ onAddComment }: { onAddComment: (text: string) => Promis
         className="flex-1 min-h-10 max-h-32 text-sm resize-none dark:bg-dark-border border border-input rounded-xl px-3 py-2.5 bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all overflow-hidden field-sizing-content"
         style={{ fieldSizing: "content" }}
         rows={1}
+        whileFocus={{ scale: 1.01 }}
+        transition={{ type: "spring", stiffness: 300 }}
       />
-      <Button
-        size="sm"
-        onClick={handleSubmit}
-        disabled={!commentText.trim()}
-        className="self-end gap-2 hover:scale-105 transition-all"
-      >
-        {getLucideIcon("Send", { size: 16 })}
-      </Button>
-    </div>
+      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+        <Button
+          size="sm"
+          onClick={handleSubmit}
+          disabled={!commentText.trim()}
+          className="self-end gap-2 hover:scale-105 transition-all"
+        >
+          {getLucideIcon("Send", { size: 16 })}
+        </Button>
+      </motion.div>
+    </motion.div>
   );
 };
 
@@ -166,130 +194,208 @@ export default function TaskItem({
   };
 
   const PriorityBadge = () => (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${priority.bg} ${priority.text} ${priority.border} shadow-xs`}>
+    <motion.span
+      whileHover={{ scale: 1.05 }}
+      transition={{ type: "spring", stiffness: 400 }}
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${priority.bg} ${priority.text} ${priority.border} shadow-xs`}
+    >
       <span className={`w-2 h-2 rounded-full ${priority.dot}`} />
       {priority.label}
-    </span>
+    </motion.span>
   );
 
   const ActionButtons = () => (
     <div className="flex items-center gap-1.5 dark:text-white">
       {(authUser?.id === task.creatorId || isProjectOwner) && (
-        <button
+        <motion.button
+          whileHover={{ scale: 1.2, rotate: 15 }}
+          whileTap={{ scale: 0.9 }}
           onClick={deleteTaskHandler}
-          className="p-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all hover:scale-110"
+          className="p-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
           title="Delete task"
         >
           {getLucideIcon("Trash2", { size: 16 })}
-        </button>
+        </motion.button>
       )}
-      <button
+      <motion.button
+        whileHover={{ scale: 1.2 }}
+        whileTap={{ scale: 0.9 }}
         onClick={() => handleUpdate({ pinned: !task.pinned })}
-        className={`p-2 rounded-lg transition-all hover:scale-110 ${
+        className={`p-2 rounded-lg transition-all ${
           task.pinned ? "text-amber-600 bg-amber-50 dark:bg-amber-900/20" : "text-muted-foreground hover:bg-muted"
         }`}
         title={task.pinned ? "Unpin" : "Pin"}
       >
         {getLucideIcon(task.pinned ? "Pin" : "PinOff", { size: 16 })}
-      </button>
-      <button
+      </motion.button>
+      <motion.button
+        whileHover={{ scale: 1.2 }}
+        whileTap={{ scale: 0.9 }}
         onClick={onToggleComments}
-        className={`relative p-2 rounded-lg transition-all hover:scale-110 ${
+        className={`relative p-2 rounded-lg transition-all ${
           isOpen ? "text-blue-600 bg-blue-50 dark:bg-blue-900/20" : "text-muted-foreground hover:bg-muted"
         }`}
         title={`${comments.length} comments`}
       >
         {getLucideIcon("MessageSquare", { size: 16 })}
-        {comments.length > 0 && (
-          <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-sm">
-            {comments.length}
-          </span>
-        )}
-      </button>
-      <button
+        <AnimatePresence>
+          {comments.length > 0 && (
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-sm"
+            >
+              {comments.length}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </motion.button>
+      <motion.button
+        whileHover={{ scale: 1.2 }}
+        whileTap={{ scale: 0.9 }}
         onClick={onToggleAttachments}
-        className={`relative p-2 rounded-lg transition-all hover:scale-110 ${
+        className={`relative p-2 rounded-lg transition-all ${
           isAttachmentOpen ? "text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20" : "text-muted-foreground hover:bg-muted"
         }`}
         title={`${attachments.length} attachments`}
       >
         {getLucideIcon("Paperclip", { size: 16 })}
-        {attachments.length > 0 && (
-          <span className="absolute -top-1 -right-1 bg-indigo-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-sm">
-            {attachments.length}
-          </span>
-        )}
-      </button>
+        <AnimatePresence>
+          {attachments.length > 0 && (
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              className="absolute -top-1 -right-1 bg-indigo-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-sm"
+            >
+              {attachments.length}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </motion.button>
     </div>
   );
 
   const AttachmentsSection = () => (
-    <div className="space-y-4 dark:text-white">
-      <div className="flex items-center gap-2">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="space-y-4 dark:text-white"
+    >
+      <motion.div
+        initial={{ x: -10 }}
+        animate={{ x: 0 }}
+        className="flex items-center gap-2"
+      >
         {getLucideIcon("Paperclip", { className: "h-4 w-4 text-muted-foreground" })}
         <h4 className="text-sm font-semibold">Attachments ({attachments.length})</h4>
-      </div>
+      </motion.div>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {attachments.length > 0 ? (
-          attachments.map((src, i) => (
-            <div
-              key={i}
-              className="group relative aspect-square rounded-xl border-2 border-dashed border-muted-foreground/20 overflow-hidden cursor-pointer hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md bg-muted/50"
-              onClick={() => onPreviewImage(src)}
+        <AnimatePresence>
+          {attachments.length > 0 ? (
+            attachments.map((src, i) => (
+              <motion.div
+                key={i}
+                layout
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="group relative aspect-square rounded-xl border-2 border-dashed border-muted-foreground/20 overflow-hidden cursor-pointer hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md bg-muted/50"
+                onClick={() => onPreviewImage(src)}
+              >
+                <img src={src} alt="" className="w-full h-full object-cover" />
+                {isProjectMember && (
+                  <motion.button
+                    whileHover={{ scale: 1.2, rotate: 90 }}
+                    whileTap={{ scale: 0.8 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveAttachment(src);
+                    }}
+                    className="absolute top-2 right-2 bg-black/70 text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-black"
+                  >
+                    {getLucideIcon("X", { size: 14 })}
+                  </motion.button>
+                )}
+              </motion.div>
+            ))
+          ) : (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="col-span-full text-sm text-muted-foreground italic text-center py-4"
             >
-              <img src={src} alt="" className="w-full h-full object-cover" />
-              {isProjectMember && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRemoveAttachment(src);
-                  }}
-                  className="absolute top-2 right-2 bg-black/70 text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-black"
-                >
-                  {getLucideIcon("X", { size: 14 })}
-                </button>
-              )}
-            </div>
-          ))
-        ) : (
-          <p className="col-span-full text-sm text-muted-foreground italic text-center py-4">No attachments yet.</p>
-        )}
+              No attachments yet.
+            </motion.p>
+          )}
+        </AnimatePresence>
       </div>
       {isProjectMember && (
-        <div className="flex items-center gap-3 pt-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={attachments.length >= 3}
-            className="gap-2 text-sm hover:scale-105 transition-all"
-          >
-            {getLucideIcon("Upload", { size: 16 })} Upload
-          </Button>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 pt-2"
+        >
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={attachments.length >= 3}
+              className="gap-2 text-sm hover:scale-105 transition-all"
+            >
+              {getLucideIcon("Upload", { size: 16 })} Upload
+            </Button>
+          </motion.div>
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} multiple />
           {attachments.length >= 3 && (
-            <span className="text-xs text-muted-foreground">Max 3 files</span>
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-xs text-muted-foreground"
+            >
+              Max 3 files
+            </motion.span>
           )}
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 
   const CommentsSection = () => (
-    <div className="space-y-4 dark:text-white">
-      <div className="flex items-center gap-2">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="space-y-4 dark:text-white"
+    >
+      <motion.div
+        initial={{ x: -10 }}
+        animate={{ x: 0 }}
+        className="flex items-center gap-2"
+      >
         {getLucideIcon("MessageSquare", { className: "h-4 w-4 text-muted-foreground" })}
         <h4 className="text-sm font-semibold">Comments ({comments.length})</h4>
-      </div>
+      </motion.div>
 
       {loadingComments ? (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground py-3">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex items-center gap-2 text-sm text-muted-foreground py-3"
+        >
           {getLucideIcon("Loader2", { className: "h-4 w-4 animate-spin" })}
           Loading comments...
-        </div>
+        </motion.div>
       ) : comments.length > 0 ? (
-        <div className="max-h-64 space-y-3 overflow-y-auto pr-1 custom-scrollbar">
-          <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="max-h-64 space-y-3 overflow-y-auto pr-1 custom-scrollbar"
+        >
+          <AnimatePresence mode="popLayout">
             {comments.map((c: any) => (
               <CommentItem
                 key={c.id}
@@ -301,46 +407,78 @@ export default function TaskItem({
               />
             ))}
           </AnimatePresence>
-        </div>
+        </motion.div>
       ) : (
-        <p className="text-sm text-muted-foreground italic py-3 text-center">No comments yet. Be the first!</p>
+        <motion.p
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-sm text-muted-foreground italic py-3 text-center"
+        >
+          No comments yet. Be the first!
+        </motion.p>
       )}
 
-      {/* Isolated Input */}
       {isProjectMember && <CommentInput onAddComment={handleAddCommentWrapper} />}
-    </div>
+    </motion.div>
   );
 
   if (viewMode === "list") {
     return (
       <motion.article
         layout
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.98 }}
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: -20 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className="group relative overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm hover:shadow-xl transition-all duration-300"
       >
-        <div className="p-6 pb-4 dark:text-white">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="p-6 pb-4 dark:text-white"
+        >
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 space-y-4">
-              <div className="flex items-center gap-2">
+              <motion.div
+                initial={{ x: -20 }}
+                animate={{ x: 0 }}
+                className="flex items-center gap-2"
+              >
                 {task.pinned && (
-                  <span className="text-amber-500 animate-pulse" title="Pinned">
+                  <motion.span
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                    className="text-amber-500"
+                    title="Pinned"
+                  >
                     {getLucideIcon("Pin", { className: "h-4 w-4 rotate-45" })}
-                  </span>
+                  </motion.span>
                 )}
                 <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
                   {task.title}
                 </h3>
-              </div>
+              </motion.div>
               {task.description && (
-                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.15 }}
+                  className="text-sm text-muted-foreground leading-relaxed line-clamp-2"
+                >
                   {task.description}
-                </p>
+                </motion.p>
               )}
-              <div className="flex flex-wrap items-center gap-3 text-sm">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-wrap items-center gap-3 text-sm"
+              >
                 <PriorityBadge />
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => {
                     const options = Object.keys(statusConfig);
                     const next = options[(options.indexOf(task.column) + 1) % options.length];
@@ -350,41 +488,67 @@ export default function TaskItem({
                 >
                   {getLucideIcon(status.icon, { size: 14 })}
                   {status.label}
-                </button>
+                </motion.button>
                 <div className="flex items-center gap-4 text-muted-foreground text-xs">
-                  <span className="flex items-center gap-1.5">
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.25 }}
+                    className="flex items-center gap-1.5"
+                  >
                     {getLucideIcon("Calendar", { size: 14 })}
                     Due {format(new Date(task.deadline), "MMM dd")}
-                  </span>
-                  <span className="flex items-center gap-1.5">
+                  </motion.span>
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="flex items-center gap-1.5"
+                  >
                     {getLucideIcon("Clock", { size: 14 })}
                     {format(new Date(task.createdAt), "MMM dd")}
-                  </span>
+                  </motion.span>
                 </div>
-              </div>
+              </motion.div>
             </div>
-            <div className="hidden lg:flex transition-opacity duration-300">
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.35 }}
+              className="hidden lg:flex transition-opacity duration-300"
+            >
               <ActionButtons />
-            </div>
+            </motion.div>
           </div>
-          <div className="mt-4 flex items-center gap-3 pt-4 border-t border-border">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mt-4 flex items-center gap-3 pt-4 border-t border-border"
+          >
             <Avatar name={creator?.name} avatar={creator?.avatar} size={28} />
             <span className="text-xs text-muted-foreground">
               Created by <span className="font-semibold text-foreground">{creator?.name || "Unknown"}</span>
             </span>
-          </div>
-        </div>
-        <div className="lg:hidden border-t border-border bg-muted/30 backdrop-blur-sm">
+          </motion.div>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.45 }}
+          className="lg:hidden border-t border-border bg-muted/30 backdrop-blur-sm"
+        >
           <div className="flex justify-center p-3">
             <ActionButtons />
           </div>
-        </div>
+        </motion.div>
         <AnimatePresence>
           {isAttachmentOpen && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="border-t border-border bg-muted/20 px-6 py-5"
             >
               <AttachmentsSection />
@@ -395,6 +559,7 @@ export default function TaskItem({
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="border-t border-border bg-muted/20 px-6 py-5"
             >
               <CommentsSection />
@@ -408,27 +573,61 @@ export default function TaskItem({
   // TABLE VIEW
   return (
     <>
-      <tr className="group hover:bg-muted/50 transition-colors duration-200 dark:text-white">
+      <motion.tr
+        layout
+        initial={{ opacity: 0, x: -30 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: 30 }}
+        className="group hover:bg-muted/50 transition-colors duration-200 dark:text-white"
+      >
         <td className="px-6 py-4">
-          <div className="flex items-start gap-3">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="flex items-start gap-3"
+          >
             <div className="w-6 h-6 flex items-center justify-center mt-0.5">
-              {task.pinned ? getLucideIcon("Pin", { className: "w-4 h-4 rotate-45 text-amber-500" }) : <div className="w-4 h-4" />}
+              {task.pinned ? (
+                <motion.div
+                  animate={{ rotate: [0, 15, -15, 0] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                >
+                  {getLucideIcon("Pin", { className: "w-4 h-4 rotate-45 text-amber-500" })}
+                </motion.div>
+              ) : (
+                <div className="w-4 h-4" />
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <h4 className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors">
                 {task.title}
               </h4>
               <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{task.description}</p>
-              <div className="flex items-center gap-2 mt-2">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.15 }}
+                className="flex items-center gap-2 mt-2"
+              >
                 <Avatar name={creator?.name} avatar={creator?.avatar} size={20} />
                 <span className="text-xs text-muted-foreground">by {creator?.name}</span>
-              </div>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         </td>
-        <td className="px-6 py-4 text-center"><PriorityBadge /></td>
         <td className="px-6 py-4 text-center">
-          <select
+          <motion.div
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <PriorityBadge />
+          </motion.div>
+        </td>
+        <td className="px-6 py-4 text-center">
+          <motion.select
+            whileHover={{ scale: 1.05 }}
             value={task.column}
             onChange={(e) => handleUpdate({ column: e.target.value })}
             className={`px-3 py-1.5 rounded-full text-xs font-semibold border-0 outline-none cursor-pointer transition-all hover:scale-105 ${status.bg} ${status.text}`}
@@ -436,27 +635,60 @@ export default function TaskItem({
             {statusOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
-          </select>
+          </motion.select>
         </td>
         <td className="px-6 py-4 text-center text-sm">
-          {task.deadline ? format(new Date(task.deadline), "MMM dd, yyyy") : "-"}
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.25 }}
+          >
+            {task.deadline ? format(new Date(task.deadline), "MMM dd, yyyy") : "-"}
+          </motion.span>
         </td>
         <td className="px-6 py-4 text-center text-sm text-muted-foreground">
-          {format(new Date(task.createdAt), "MMM dd, yyyy")}
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            {format(new Date(task.createdAt), "MMM dd, yyyy")}
+          </motion.span>
         </td>
         <td className="px-6 py-4">
-          <div className="flex justify-center"><ActionButtons /></div>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.35 }}
+            className="flex justify-center"
+          >
+            <ActionButtons />
+          </motion.div>
         </td>
-      </tr>
+      </motion.tr>
       <AnimatePresence>
         {isAttachmentOpen && (
-          <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <td colSpan={6} className="bg-muted/20 px-6 py-5"><AttachmentsSection /></td>
+          <motion.tr
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          >
+            <td colSpan={6} className="bg-muted/20 px-6 py-5">
+              <AttachmentsSection />
+            </td>
           </motion.tr>
         )}
         {isOpen && (
-          <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <td colSpan={6} className="bg-muted/20 px-6 py-5"><CommentsSection /></td>
+          <motion.tr
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          >
+            <td colSpan={6} className="bg-muted/20 px-6 py-5">
+              <CommentsSection />
+            </td>
           </motion.tr>
         )}
       </AnimatePresence>
