@@ -20,7 +20,7 @@ export const tasksApi = createApi({
     updateTask: builder.mutation<Task, { id: string; updates: Partial<Task> }>({
       query: ({ id, updates }) => ({
         url: `/tasks/${id}`,
-        method: "PATCH",
+        method: "PUT",
         body: updates,
       }),
       invalidatesTags: ["Task"],

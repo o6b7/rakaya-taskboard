@@ -90,7 +90,6 @@ const App: React.FC = () => {
             </PrivateRoute>
           }
         />
-
         <Route
           path="/users"
           element={
@@ -99,6 +98,7 @@ const App: React.FC = () => {
             </PrivateRoute>
           }
         />
+
 
         <Route
           path="/calendar"

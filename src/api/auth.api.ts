@@ -61,14 +61,15 @@ export const authApi = createApi({
       queryFn: async ({ userData }) => {
         try {
           // ---- 1. Email uniqueness ----
-          const checkResponse = await fetch(
-            `${API_URL}/users?email=${encodeURIComponent(userData.email)}`
-          );
+          const checkResponse = await fetch(`${API_URL}/users`);
           if (!checkResponse.ok) throw new Error("Failed to check existing users");
           const existingUsers = await checkResponse.json();
-          if (existingUsers.length > 0) {
-            throw new Error("User with this email already exists");
-          }
+
+          const userExists = existingUsers.some(
+            (u: any) => u.email.toLowerCase() === userData.email.toLowerCase()
+          );
+          if (userExists) throw new Error("User with this email already exists");
+
 
           // ---- 2. Hash password ----
           if (!userData.password) throw new Error("Password is required");

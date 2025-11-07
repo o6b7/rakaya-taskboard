@@ -1,4 +1,3 @@
-// src/api/projects.api.ts
 import { createApi } from "@reduxjs/toolkit/query/react";
 import type { Project, NewProject } from "../types";
 import { authorizedBaseQuery } from "../lib/authorizedBaseQuery";
@@ -34,13 +33,11 @@ export const projectsApi = createApi({
     }),
 
     updateProject: builder.mutation<Project, { id: string; updates: Partial<Project> }>({
-      query: ({ id, updates }) => {
-        return {
-          url: `/projects/${id}`,
-          method: "PATCH",
-          body: updates,
-        };
-      },
+      query: ({ id, updates }) => ({
+        url: `/projects/${id}`,
+        method: "PUT",
+        body: updates,
+      }),
       invalidatesTags: ["Project"],
     }),
 

@@ -20,7 +20,7 @@ export const usersApi = createApi({
     updateUser: builder.mutation<User, { id: string; updates: Partial<User> }>({
       query: ({ id, updates }) => ({
         url: `/users/${id}`,
-        method: "PATCH",
+        method: "PUT",
         body: updates,
       }),
       invalidatesTags: ["User"],
