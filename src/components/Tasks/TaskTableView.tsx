@@ -14,7 +14,7 @@ interface TaskListViewProps {
   projectId: string;
 }
 
-export default function TaskTableView({ projectId }: TaskTableViewProps) {
+export default function TaskTableView({ projectId }: TaskListViewProps) {
   const { data: tasks = [], isLoading } = useGetTasksByProjectQuery(projectId);
   const { data: project } = useGetProjectByIdQuery(projectId);
   const { data: users = [] } = useGetAllUsersQuery();

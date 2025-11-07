@@ -6,6 +6,7 @@ export interface User {
   password: string; 
   role: string;
   createdAt?: string;
+  authorized: boolean;
 }
 
 export interface UserProfile extends Omit<User, "password"> {

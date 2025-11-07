@@ -250,6 +250,19 @@ const Sidebar = () => {
 
             {/* Calendar */}
             <button
+              onClick={() => handleNavigate("/users")}
+              className={clsx(
+                "flex items-center gap-3 w-full px-4 py-2.5 rounded-lg transition-colors",
+                isActiveRoute("/users")
+                  ? "bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-300 font-semibold"
+                  : "text-gray-700 dark:text-dark-text hover:bg-gray-100 dark:hover:bg-dark-card hover:text-gray-900 dark:hover:text-white"
+              )}
+            >
+              {getLucideIcon("Users", { className: "w-5 h-5" })}
+              <span className="font-medium">Users</span>
+            </button>
+
+            <button
               onClick={() => handleNavigate("/calendar")}
               className={clsx(
                 "flex items-center gap-3 w-full px-4 py-2.5 rounded-lg transition-colors",

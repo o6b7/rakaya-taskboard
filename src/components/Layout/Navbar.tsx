@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toggleSidebar, toggleDarkMode } from "../../store/slices/uiSlice";
 import { useAppDispatch, useAppSelector } from "../../store";
 import { useGetTasksQuery } from "../../api/tasks.api";
 import { useGetProjectsQuery } from "../../api/projects.api";
+import { useGetAllUsersQuery } from "../../api/users.api";
 import Avatar from "../Common/Avatar";
 import { Button } from "../ui/Button";
 import { getLucideIcon } from "../../lib/getLucideIcon";
@@ -14,16 +15,27 @@ const Navbar = () => {
   const [openProfile, setOpenProfile] = useState(false);
 
   const authUser = JSON.parse(localStorage.getItem("authUser") || "{}");
-  const userId = authUser?.id || "U1";
-  const name = authUser?.name || "Brandon Workman";
-  const email = authUser?.email || "brandon.workman@example.com";
-  const createdAt = authUser?.createdAt || "2023-06-12T09:00:00Z";
+  const userId = authUser?.id;
+  const fallbackName = authUser?.name || "User";
+  const fallbackEmail = authUser?.email || "user@example.com";
+  const fallbackCreated = authUser?.createdAt || "2023-01-01T00:00:00Z";
 
+  const { data: allUsers = [] } = useGetAllUsersQuery();
   const { data: allTasks = [] } = useGetTasksQuery();
   const { data: allProjects = [] } = useGetProjectsQuery();
 
+  // ✅ Get real user data from DB
+  const userFromDb = useMemo(
+    () => allUsers.find((u) => u.id === userId),
+    [allUsers, userId]
+  );
+
+  const name = userFromDb?.name || fallbackName;
+  const email = userFromDb?.email || fallbackEmail;
+  const avatar = userFromDb?.avatar || authUser?.avatar || null;
+  const createdAt = userFromDb?.createdAt || fallbackCreated;
+
   const userTasks = allTasks.filter((t) => t.assigneeIds?.includes(userId));
-  
   const counts = {
     backlog: userTasks.filter((t) => t.column === "backlog").length,
     todo: userTasks.filter((t) => t.column === "todo").length,
@@ -41,17 +53,14 @@ const Navbar = () => {
     month: "long",
   });
 
+  // ✅ Apply dark mode dynamically
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    document.documentElement.classList.toggle("dark", darkMode);
   }, [darkMode]);
 
   return (
     <nav className="relative flex items-center justify-between px-4 sm:px-6 py-3 bg-white dark:bg-dark-surface border-b border-surface-border dark:border-dark-border transition-colors duration-300">
-      {/* Left section */}
+      {/* Left Section */}
       <div className="flex items-center gap-3 flex-1">
         <button
           className="sm:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-card transition"
@@ -70,18 +79,16 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Right section */}
+      {/* Right Section */}
       <div className="flex items-center gap-4 ml-6 relative">
         {/* Dark Mode */}
         <button
           onClick={() => dispatch(toggleDarkMode())}
           className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-card transition"
         >
-          {darkMode ? (
-            getLucideIcon("Sun", { className: "w-5 h-5 text-yellow-400" })
-          ) : (
-            getLucideIcon("Moon", { className: "w-5 h-5 text-gray-500 dark:text-dark-muted" })
-          )}
+          {darkMode
+            ? getLucideIcon("Sun", { className: "w-5 h-5 text-yellow-400" })
+            : getLucideIcon("Moon", { className: "w-5 h-5 text-gray-500 dark:text-dark-muted" })}
         </button>
 
         {/* Mail + Notifications */}
@@ -94,19 +101,19 @@ const Navbar = () => {
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
         </button>
 
-        {/* User Avatar */}
+        {/* Profile Avatar */}
         <div
           className="flex items-center gap-2 cursor-pointer select-none"
           onClick={() => setOpenProfile((prev) => !prev)}
         >
-          <Avatar name={name} avatar={authUser.Avatar} size={36} />
+          <Avatar name={name} avatar={avatar} size={36} />
           <span className="hidden sm:inline text-sm font-medium text-gray-800 dark:text-dark-text">
             {name}
           </span>
           {getLucideIcon("ChevronDown", {
             className: `w-4 h-4 text-gray-500 dark:text-dark-muted transition-transform duration-300 ${
               openProfile ? "rotate-180" : ""
-            }`
+            }`,
           })}
         </div>
 
@@ -121,7 +128,7 @@ const Navbar = () => {
               className="absolute right-0 top-12 w-72 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-lg p-4 z-50"
             >
               <div className="flex items-center gap-3 mb-3">
-                <Avatar name={name} avatar={authUser.Avatar} size={48} />
+                <Avatar name={name} avatar={avatar} size={48} />
                 <div>
                   <h4 className="font-semibold text-gray-800 dark:text-dark-text">{name}</h4>
                   <p className="text-xs text-gray-500 dark:text-dark-muted">{email}</p>
