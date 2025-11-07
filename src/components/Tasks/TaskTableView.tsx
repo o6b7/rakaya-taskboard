@@ -1,6 +1,6 @@
 // src/views/TaskTableView.tsx
 import React, { useState, useMemo } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useGetTasksByProjectQuery } from "../../api/tasks.api";
 import { useGetProjectByIdQuery } from "../../api/projects.api";
 import { useGetAllUsersQuery } from "../../api/users.api";
@@ -9,20 +9,23 @@ import { motion, AnimatePresence } from "framer-motion";
 import TaskItem from "./TaskItem";
 import type { User } from "../../types";
 import { getLucideIcon } from "../../lib/getLucideIcon";
+import { setSearchQuery, setFilterPriority } from "../../store/slices/tasksSlice";   // <-- NEW
 
-interface TaskListViewProps {
+interface TaskTableViewProps {
   projectId: string;
 }
 
-export default function TaskTableView({ projectId }: TaskListViewProps) {
+export default function TaskTableView({ projectId }: TaskTableViewProps) {
+  const dispatch = useDispatch();
   const { data: tasks = [], isLoading } = useGetTasksByProjectQuery(projectId);
   const { data: project } = useGetProjectByIdQuery(projectId);
   const { data: users = [] } = useGetAllUsersQuery();
-  const { searchQuery, filterPriority } = useSelector((state: RootState) => state.tasks);
+
+  const { searchQuery, filterPriority } = useSelector((s: RootState) => s.tasks);
+  const [filterStatus, setFilterStatus] = useState("all");               // <-- local status filter
   const [openTask, setOpenTask] = useState<string | null>(null);
   const [openAttachmentTask, setOpenAttachmentTask] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [filterStatus, setFilterStatus] = useState("all");
 
   const authUser = useMemo<User | null>(() => {
     const stored = localStorage.getItem("authUser");
@@ -31,8 +34,23 @@ export default function TaskTableView({ projectId }: TaskListViewProps) {
 
   const isProjectOwner = project?.ownerId === authUser?.id;
   const isProjectMember = project?.members?.includes(authUser?.id) || isProjectOwner;
-
   const getUserById = (id: string) => users.find((u) => u.id === id);
+
+  /* ---------- FILTER LOGIC ---------- */
+  const filteredTasks = useMemo(() => {
+    const sorted = [...tasks].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+
+    return sorted.filter((task) => {
+      const matchesQuery =
+        task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        task.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesPriority = filterPriority === "all" || task.priority === filterPriority;
+      const matchesStatus = filterStatus === "all" || task.column === filterStatus;
+
+      return matchesQuery && matchesPriority && matchesStatus;
+    });
+  }, [tasks, searchQuery, filterPriority, filterStatus]);
 
   if (isLoading) {
     return (
@@ -42,21 +60,79 @@ export default function TaskTableView({ projectId }: TaskListViewProps) {
     );
   }
 
-  const sortedTasks = [...tasks].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
-  const filteredTasks = sortedTasks.filter((task) => {
-    const matchesQuery =
-      task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesPriority = filterPriority === "all" || task.priority === filterPriority;
-    const matchesStatus = filterStatus === "all" || task.column === filterStatus;
-    return matchesQuery && matchesPriority && matchesStatus;
-  });
+  /* ---------- PRIORITY & STATUS UI ---------- */
+  const priorityOpts = [
+    { v: "all", l: "All", i: "Filter" },
+    { v: "High", l: "High", i: "AlertTriangle", c: "text-red-600" },
+    { v: "Medium", l: "Medium", i: "Minus", c: "text-amber-600" },
+    { v: "Low", l: "Low", i: "ArrowDown", c: "text-green-600" },
+  ];
+
+  const statusOpts = [
+    { v: "all", l: "All" },
+    { v: "backlog", l: "Backlog" },
+    { v: "todo", l: "To Do" },
+    { v: "inprogress", l: "In Progress" },
+    { v: "needreview", l: "Need Review" },
+    { v: "done", l: "Done" },
+  ];
 
   return (
     <>
-      {/* Mobile: Fixed width + horizontal scroll */}
+      {/* ───── FILTER BAR ───── */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between pb-4 border-b border-border">
+        {/* Search */}
+        <div className="flex-1 max-w-md">
+          <div className="relative">
+            {getLucideIcon("Search", {
+              className: "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground",
+            })}
+            <input
+              type="text"
+              placeholder="Search tasks..."
+              value={searchQuery}
+              onChange={(e) => dispatch(setSearchQuery(e.target.value))}
+              className="w-full pl-10 pr-4 py-2 text-sm border border-border rounded-xl bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            />
+          </div>
+        </div>
+
+        {/* Priority buttons */}
+        <div className="flex gap-2 flex-wrap">
+          {priorityOpts.map((o) => (
+            <button
+              key={o.v}
+              onClick={() => dispatch(setFilterPriority(o.v as any))}
+              className={`
+                flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all
+                border shadow-sm hover:scale-105 active:scale-95
+                ${filterPriority === o.v
+                  ? "bg-primary text-primary-foreground border-primary shadow-md"
+                  : "bg-background text-muted-foreground border-border hover:bg-muted"
+                }
+              `}
+            >
+              {getLucideIcon(o.i, { className: `w-3.5 h-3.5 ${o.c || ""}` })}
+              {o.l}
+            </button>
+          ))}
+        </div>
+
+        {/* Status dropdown */}
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+        >
+          {statusOpts.map((s) => (
+            <option key={s.v} value={s.v}>{s.l}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* ───── MOBILE TABLE (horizontal scroll) ───── */}
       <div className="sm:hidden w-80 mx-auto overflow-x-auto rounded-2xl bg-white dark:bg-dark-surface dark:border-dark-border">
-        <div className="min-w-[640px]"> {/* Forces horizontal scroll */}
+        <div className="min-w-[640px]">
           <table className="w-full table-auto border-collapse">
             <thead>
               <tr className="border-b border-surface-border dark:border-dark-border bg-gray-50 dark:bg-dark-card">
@@ -88,7 +164,6 @@ export default function TaskTableView({ projectId }: TaskListViewProps) {
                 filteredTasks.map((task) => {
                   const isOpen = openTask === task.id;
                   const isAttachmentOpen = openAttachmentTask === task.id;
-
                   return (
                     <TaskItem
                       key={task.id}
@@ -112,7 +187,7 @@ export default function TaskTableView({ projectId }: TaskListViewProps) {
         </div>
       </div>
 
-      {/* Desktop: Full width */}
+      {/* ───── DESKTOP TABLE ───── */}
       <div className="hidden sm:block w-full overflow-x-auto rounded-2xl bg-white dark:bg-dark-surface dark:border-dark-border">
         <table className="w-full table-auto border-collapse">
           <thead>
@@ -155,7 +230,6 @@ export default function TaskTableView({ projectId }: TaskListViewProps) {
               filteredTasks.map((task) => {
                 const isOpen = openTask === task.id;
                 const isAttachmentOpen = openAttachmentTask === task.id;
-
                 return (
                   <TaskItem
                     key={task.id}
@@ -178,7 +252,7 @@ export default function TaskTableView({ projectId }: TaskListViewProps) {
         </table>
       </div>
 
-      {/* Image Preview Modal */}
+      {/* ───── IMAGE PREVIEW MODAL ───── */}
       <AnimatePresence>
         {previewImage && (
           <motion.div

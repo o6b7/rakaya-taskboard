@@ -1,14 +1,14 @@
-// src/views/TaskListView.tsx
 import React, { useState, useMemo, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { useGetTasksByProjectQuery } from "../../api/tasks.api";
 import { useGetProjectByIdQuery } from "../../api/projects.api";
 import { useGetAllUsersQuery } from "../../api/users.api";
-import type { RootState } from "../../store";
+import { useAppDispatch, type RootState } from "../../store";
 import { getLucideIcon } from "../../lib/getLucideIcon";
 import { motion, AnimatePresence } from "framer-motion";
 import TaskItem from "./TaskItem";
 import type { User } from "../../types";
+import { setFilterPriority, setFilterStatus, setSearchQuery } from "../../store/slices/tasksSlice";
 
 interface TaskListViewProps {
   projectId: string;
@@ -18,7 +18,12 @@ export default function TaskListView({ projectId }: TaskListViewProps) {
   const { data: tasks = [], isLoading } = useGetTasksByProjectQuery(projectId);
   const { data: project } = useGetProjectByIdQuery(projectId);
   const { data: users = [] } = useGetAllUsersQuery();
-  const { searchQuery, filterPriority } = useSelector((state: RootState) => state.tasks);
+
+  // Redux state
+  const { searchQuery, filterPriority, filterStatus } = useSelector((state: RootState) => state.tasks);
+  const dispatch = useAppDispatch();
+
+  // Local UI state
   const [openTaskId, setOpenTaskId] = useState<string | null>(null);
   const [openAttachmentId, setOpenAttachmentId] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -36,16 +41,20 @@ export default function TaskListView({ projectId }: TaskListViewProps) {
     [users]
   );
 
+  // Filter + Sort
   const sortedAndFilteredTasks = useMemo(() => {
     const sorted = [...tasks].sort((a, b) => Number(b.pinned) - Number(a.pinned));
     return sorted.filter((task) => {
       const matchesQuery =
         task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         task.description.toLowerCase().includes(searchQuery.toLowerCase());
+
       const matchesPriority = filterPriority === "all" || task.priority === filterPriority;
-      return matchesQuery && matchesPriority;
+      const matchesStatus = filterStatus === "all" || task.column === filterStatus;
+
+      return matchesQuery && matchesPriority && matchesStatus;
     });
-  }, [tasks, searchQuery, filterPriority]);
+  }, [tasks, searchQuery, filterPriority, filterStatus]);
 
   if (isLoading) {
     return (
@@ -60,6 +69,72 @@ export default function TaskListView({ projectId }: TaskListViewProps) {
 
   return (
     <div className="space-y-5">
+      {/* FILTER BAR */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        {/* Search */}
+        <div className="flex-1 max-w-md">
+          <div className="relative">
+            {getLucideIcon("Search", {
+              className: "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground",
+            })}
+            <input
+              type="text"
+              placeholder="Search tasks..."
+              value={searchQuery}
+              onChange={(e) => dispatch(setSearchQuery(e.target.value))}
+              className="w-full pl-10 pr-4 py-2 text-sm border border-border rounded-xl bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            />
+          </div>
+        </div>
+
+        {/* Priority Buttons */}
+        <div className="flex gap-2 flex-wrap">
+          {[
+            { value: "all", label: "All", icon: "Filter" },
+            { value: "High", label: "High", icon: "AlertTriangle", color: "text-red-600" },
+            { value: "Medium", label: "Medium", icon: "Minus", color: "text-amber-600" },
+            { value: "Low", label: "Low", icon: "ArrowDown", color: "text-green-600" },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => dispatch(setFilterPriority(opt.value as any))}
+              className={`
+                flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all
+                border shadow-sm hover:scale-105 active:scale-95
+                ${filterPriority === opt.value
+                  ? "bg-primary text-primary-foreground border-primary shadow-md"
+                  : "bg-background text-muted-foreground border-border hover:bg-muted"
+                }
+              `}
+            >
+              {getLucideIcon(opt.icon, { className: `w-3.5 h-3.5 ${opt.color || ""}` })}
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Status Dropdown */}
+        <select
+          value={filterStatus}
+          onChange={(e) => dispatch(setFilterStatus(e.target.value as any))}
+          className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+        >
+          {[
+            { value: "all", label: "All Status" },
+            { value: "backlog", label: "Backlog" },
+            { value: "todo", label: "To Do" },
+            { value: "inprogress", label: "In Progress" },
+            { value: "needreview", label: "Need Review" },
+            { value: "done", label: "Done" },
+          ].map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* TASK LIST */}
       {sortedAndFilteredTasks.length === 0 ? (
         <EmptyState />
       ) : (
@@ -67,7 +142,6 @@ export default function TaskListView({ projectId }: TaskListViewProps) {
           {sortedAndFilteredTasks.map((task) => {
             const isOpen = openTaskId === task.id;
             const isAttachmentOpen = openAttachmentId === task.id;
-
             return (
               <TaskItem
                 key={task.id}
@@ -88,7 +162,7 @@ export default function TaskListView({ projectId }: TaskListViewProps) {
         </div>
       )}
 
-      {/* Image Preview Modal */}
+      {/* IMAGE PREVIEW MODAL */}
       <AnimatePresence>
         {previewImage && (
           <motion.div

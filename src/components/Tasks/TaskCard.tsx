@@ -321,52 +321,63 @@ export default function TaskCard({ task }: { task: Task }) {
 
         {/* Comments Section */}
         <div
-          className={`overflow-hidden transition-[max-height,opacity] duration-500 ease-in-out ${
-            isCommentOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+          className={`overflow-hidden transition-all duration-500 ease-in-out ${
+            isCommentOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
           }`}
         >
-          <div className="bg-gray-50 dark:bg-dark-surface border-t border-gray-200 dark:border-dark-border p-3 space-y-2">
+          <div className="bg-gray-50 dark:bg-dark-surface border-t border-gray-200 dark:border-dark-border p-3 space-y-3 max-h-[400px] overflow-y-auto">
             {comments.length === 0 ? (
               <p className="text-xs text-gray-500 dark:text-dark-muted italic">No comments yet.</p>
             ) : (
-              comments.map((c) => {
-                const user = allUsers?.find((u) => u.id === c.userId);
-                const canDelete = c.userId === authUser?.id || isProjectOwner;
-                return (
-                  <div
-                    key={c.id}
-                    className="flex items-start gap-2 p-2 bg-white dark:bg-dark-card border rounded-md text-xs text-gray-700 dark:text-dark-text"
-                  >
-                    <Avatar name={user?.name || "Unknown"} avatar={user?.avatar} size={25} />
-                    <div className="flex-1">
-                      <p className="text-[11px] text-gray-500 dark:text-dark-muted">
-                        {user?.name || "Unknown"}
-                      </p>
-                      <p className="text-xs text-gray-700 dark:text-dark-text">{c.content}</p>
+              <div className="space-y-2">
+                {comments.map((c) => {
+                  const user = allUsers?.find((u) => u.id === c.userId);
+                  const canDelete = c.userId === authUser?.id || isProjectOwner;
+                  return (
+                    <div
+                      key={c.id}
+                      className="flex items-start gap-2 p-2 bg-white dark:bg-dark-card border rounded-md text-xs text-gray-700 dark:text-dark-text"
+                    >
+                      <Avatar name={user?.name || "Unknown"} avatar={user?.avatar} size={25} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] text-gray-500 dark:text-dark-muted truncate">
+                          {user?.name || "Unknown"}
+                        </p>
+                        <p className="text-xs text-gray-700 dark:text-dark-text break-words">{c.content}</p>
+                      </div>
+                      {canDelete && (
+                        <button
+                          onClick={() => handleDeleteComment(c.id, c.userId)}
+                          className="ml-2 text-red-500 hover:text-red-700 text-xs flex-shrink-0"
+                        >
+                          Delete
+                        </button>
+                      )}
                     </div>
-                    {canDelete && (
-                      <button
-                        onClick={() => handleDeleteComment(c.id, c.userId)}
-                        className="ml-2 text-red-500 hover:text-red-700 text-xs"
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </div>
-                );
-              })
+                  );
+                })}
+              </div>
             )}
-            <div className="flex items-center gap-2 mt-2">
-              <input
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleAddCommentWrapper()}
-                placeholder="Add a comment..."
-                className="flex-1 text-xs border rounded-md p-2 outline-none focus:ring-1 focus:ring-blue-400 dark:bg-dark-card dark:text-dark-text dark:border-dark-border"
-              />
-              <Button onClick={handleAddCommentWrapper} className="p-2">
-                {getLucideIcon("Send", { className: "w-[14px] h-[14px]" })}
-              </Button>
+
+            {/* Comment Input - Sticky at Bottom */}
+            <div className="sticky bottom-0 bg-gray-50 dark:bg-dark-surface pt-2 -mx-3 px-3 pb-3 border-t border-gray-200 dark:border-dark-border">
+              <div className="flex items-center gap-2">
+                <input
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleAddCommentWrapper();
+                    }
+                  }}
+                  placeholder="Add a comment..."
+                  className="flex-1 text-xs border rounded-md p-2 outline-none focus:ring-1 focus:ring-blue-400 dark:bg-dark-card dark:text-dark-text dark:border-dark-border resize-none"
+                />
+                <Button onClick={handleAddCommentWrapper} className="p-2">
+                  {getLucideIcon("Send", { className: "w-[14px] h-[14px]" })}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
