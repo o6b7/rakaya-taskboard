@@ -21,6 +21,7 @@ import { useAppSelector } from '../../store';
 import { useGetProjectsQuery } from '../../api/projects.api';
 import { useGetTasksQuery } from '../../api/tasks.api';
 import { motion, AnimatePresence } from 'framer-motion';
+import HomePageSkeleton from '../../components/Skeletons/HomePageSkeleton';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
@@ -123,15 +124,7 @@ const HomePage: React.FC = () => {
   const tooltipTextColor = isDarkMode ? '#ffffff' : '#374151'; // White text in dark mode
 
   if (isProjectsLoading) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex h-screen items-center justify-center"
-      >
-        <p className="text-lg text-gray-600 dark:text-gray-300">Loading projects...</p>
-      </motion.div>
-    );
+    return <HomePageSkeleton />;
   }
 
   return (

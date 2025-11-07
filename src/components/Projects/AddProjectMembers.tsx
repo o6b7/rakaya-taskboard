@@ -8,6 +8,7 @@ import { confirmAction, showSuccess } from "../../utils/sweetAlerts";
 import { Button } from "../ui/Button";
 import toast from "react-hot-toast";
 import { useAppSelector, type RootState } from "../../store";
+import { getLucideIcon } from "../../lib/getLucideIcon";
 
 interface AddProjectMembersProps {
   isOpen: boolean;
@@ -157,7 +158,7 @@ export default function AddProjectMembers({
                 whileTap={{ scale: 0.9 }}
                 onClick={onClose}
               >
-                <X className="w-5 h-5 text-gray-500 dark:text-dark-muted" />
+                {getLucideIcon("X", { className: "w-5 h-5 text-gray-500 dark:text-dark-muted" })}
               </motion.button>
             </motion.div>
 
@@ -232,7 +233,7 @@ export default function AddProjectMembers({
                           animate={{ scale: 1 }}
                           transition={{ type: "spring", stiffness: 500 }}
                         >
-                          <Check className="w-4 h-4" />
+                          {getLucideIcon("Check", { className: "w-4 h-4" })}
                         </motion.div>
                       )}
                     </motion.button>

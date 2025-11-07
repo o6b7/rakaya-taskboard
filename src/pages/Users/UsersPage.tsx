@@ -25,6 +25,7 @@ import {
 } from "../../utils/sweetAlerts";
 import { getLucideIcon } from "../../lib/getLucideIcon";
 import { format } from "date-fns";
+import UsersPageSkeleton from "../../components/Skeletons/UsersPageSkeleton";
 
 export default function UsersPage() {
   const { user: currentUser } = useAppSelector((state) => state.auth);
@@ -36,9 +37,6 @@ export default function UsersPage() {
 
   const isOwner = currentUser?.role === "owner";
 
-  // ──────────────────────────────────────────────────────────────
-  // 1. Safe search – guard against undefined fields
-  // ──────────────────────────────────────────────────────────────
   const filteredUsers = useMemo(() => {
     if (!searchQuery.trim()) return users;
 
@@ -106,9 +104,11 @@ export default function UsersPage() {
     }
   };
 
-  // ──────────────────────────────────────────────────────────────
+  if (isLoading) {
+    return <UsersPageSkeleton />;
+  }
+  
   // Block non-owners
-  // ──────────────────────────────────────────────────────────────
   if (!isOwner) {
     return (
       <motion.div

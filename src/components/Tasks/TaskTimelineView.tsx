@@ -5,7 +5,6 @@ import { useParams } from "react-router-dom";
 import { useGetTasksByProjectQuery } from "../../api/tasks.api";
 import { useAppSelector } from "../../store";
 import { differenceInDays } from "date-fns";
-import { Clock, Pin, Calendar, Loader2 } from "lucide-react";
 import type { Task } from "../../types";
 import { getLucideIcon } from "../../lib/getLucideIcon";
 import { motion } from "framer-motion";
@@ -158,7 +157,7 @@ export default function TaskTimelineView() {
     return (
       <div className="flex items-center justify-center h-64 rounded-2xl bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border shadow-sm dark:shadow-card-dark">
         <div className="flex items-center gap-2 text-lg text-gray-600 dark:text-gray-300">
-          <Loader2 className="w-5 h-5 animate-spin" />
+          {getLucideIcon("Loader2", { className: "w-5 h-5 animate-spin" })}
           Loading…
         </div>
       </div>
@@ -185,7 +184,7 @@ export default function TaskTimelineView() {
                   : "text-gray-500 dark:text-dark-muted hover:text-gray-700 dark:hover:text-dark-text"
               }`}
             >
-              <Clock className="w-3.5 h-3.5" />
+              {getLucideIcon("Clock", { className: "w-3.5 h-3.5" })}
               {label}
             </button>
           ))}
@@ -275,7 +274,7 @@ export default function TaskTimelineView() {
                         >
                           <div className="w-96 flex items-center gap-2 truncate" title={task.name}>
                             <div className="w-5 flex justify-center text-yellow-500">
-                              {t.pinned && <Pin className="w-3.5 h-3.5 rotate-45" />}
+                              {t.pinned && getLucideIcon("Loader2", { className: "w-3.5 h-3.5 rotate-45" })}
                             </div>
 
                             {/* Priority Badge */}

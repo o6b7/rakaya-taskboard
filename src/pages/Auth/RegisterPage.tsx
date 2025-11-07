@@ -4,21 +4,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  Eye,
-  EyeOff,
-  Mail,
-  Lock,
-  User,
-  UserPlus,
-  CheckCircle,
-  XCircle,
-} from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { useSignupMutation } from "../../api/auth.api";
 import { showSuccess, showError } from "../../utils/sweetAlerts";
 import { useAppDispatch, useAppSelector } from "../../store";
+import { getLucideIcon } from "../../lib/getLucideIcon";
 
 const registerSchema = z
   .object({
@@ -47,9 +38,9 @@ type RegisterForm = z.infer<typeof registerSchema>;
 const PasswordRequirement = ({ ok, text }: { ok: boolean; text: string }) => (
   <div className="flex items-center gap-2">
     {ok ? (
-      <CheckCircle className="w-4 h-4 text-green-500" />
+      getLucideIcon("CheckCircle", { className: "w-4 h-4 text-green-500" })
     ) : (
-      <XCircle className="w-4 h-4 text-gray-400" />
+      getLucideIcon("XCircle", { className: "w-4 h-4 text-green-400" })
     )}
     <span
       className={`text-sm ${
@@ -150,7 +141,7 @@ export default function RegisterPage() {
           className="text-center"
         >
           <div className="mx-auto w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mb-4">
-            <UserPlus className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+            {getLucideIcon("UserPlus", { className: "w-8 h-8 text-blue-600 dark:text-blue-400" })}
           </div>
           <h2 className="text-3xl font-bold text-gray-900 dark:text-dark-text">
             Create Account
@@ -181,7 +172,7 @@ export default function RegisterPage() {
                     errors.name ? "border-red-500 focus:ring-red-500" : ""
                   }`}
                 />
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-dark-muted" />
+                {getLucideIcon("User", { className: "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-dark-muted" })}
               </div>
               {errors.name && (
                 <p className="text-xs text-red-600 dark:text-red-400">
@@ -204,7 +195,7 @@ export default function RegisterPage() {
                     errors.email ? "border-red-500 focus:ring-red-500" : ""
                   }`}
                 />
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-dark-muted" />
+                {getLucideIcon("Mail", { className: "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-dark-muted" })}
               </div>
               {errors.email && (
                 <p className="text-xs text-red-600 dark:text-red-400">
@@ -227,13 +218,13 @@ export default function RegisterPage() {
                     errors.password ? "border-red-500 focus:ring-red-500" : ""
                   }`}
                 />
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-dark-muted" />
+                {getLucideIcon("Lock", { className: "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-dark-muted" })}
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-dark-muted hover:text-gray-600 dark:hover:text-dark-text"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? getLucideIcon("EyeOff", { className: "w-4 h-4" }) : getLucideIcon("Eye", { className: "w-4 h-4" })}
                 </button>
               </div>
 
@@ -267,13 +258,13 @@ export default function RegisterPage() {
                     errors.confirmPassword ? "border-red-500 focus:ring-red-500" : ""
                   }`}
                 />
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-dark-muted" />
+                {getLucideIcon("Lock", { className: "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-dark-muted" })}
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-dark-muted hover:text-gray-600 dark:hover:text-dark-text"
                 >
-                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showConfirmPassword ? getLucideIcon("EyeOff", { className: "w-4 h-4" }) : getLucideIcon("Eye", { className: "w-4 h-4" })}
                 </button>
               </div>
               {errors.confirmPassword && (
@@ -292,7 +283,7 @@ export default function RegisterPage() {
                 </>
               ) : (
                 <>
-                  <UserPlus className="w-5 h-5" />
+                  {getLucideIcon("UserPlus", { className: "w-5 h-5" })}
                   Create Account
                 </>
               )}

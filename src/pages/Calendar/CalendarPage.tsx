@@ -1,4 +1,3 @@
-// src/pages/Calendar/CalendarPage.tsx
 import React, { useState, useMemo } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -19,6 +18,7 @@ import { useGetProjectsQuery } from "../../api/projects.api";
 import { useAppSelector } from "../../store";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
+import CalendarPageSkeleton from "../../components/Skeletons/CalendarPageSkeleton";
 
 export default function CalendarPage() {
   const navigate = useNavigate();
@@ -66,7 +66,7 @@ export default function CalendarPage() {
       });
   }, [tasks, projects, selectedProject, selectedAssignee, user?.id]);
 
-  // 🪣 Dropdown data
+  // Dropdown data
   const projectOptions = [
     { value: "all", label: "All Projects" },
     ...projects.map((p) => ({ value: p.id, label: p.name })),
@@ -117,14 +117,8 @@ export default function CalendarPage() {
     );
   };
 
-  // 🕒 Loading
   if (tasksLoading || projectsLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen text-center">
-        <Loader2 className="w-10 h-10 text-primary-600 animate-spin mb-3" />
-        <p className="text-gray-600 dark:text-gray-400">Loading calendar...</p>
-      </div>
-    );
+    return <CalendarPageSkeleton />
   }
 
   return (

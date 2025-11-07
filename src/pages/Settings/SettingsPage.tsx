@@ -265,14 +265,12 @@ export default function SettingsPage() {
           "Your changes have been saved."
         );
       } catch {
-        // handled inside handleUpdate
+        console.log("Error updating");
+        
       }
     }
   };
 
-  /* ──────────────────────────────────────────────────────────────
-     Password submit
-     ────────────────────────────────────────────────────────────── */
   const onPasswordSubmit = async (data: PasswordForm) => {
     const result = await confirmAction({
       title: "Change Password?",

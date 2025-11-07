@@ -4,13 +4,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Mail, Lock, LogIn } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { useLoginMutation } from "../../api/auth.api";
 import { showError } from "../../utils/sweetAlerts";
 import { useAppDispatch, useAppSelector } from "../../store";
 import { setCredentials } from "../../store/slices/authSlice";
+import { getLucideIcon } from "../../lib/getLucideIcon";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -77,7 +77,7 @@ export default function LoginPage() {
           className="text-center"
         >
           <div className="mx-auto w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mb-4">
-            <LogIn className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+            {getLucideIcon("LogIn", { className: "w-8 h-8 text-blue-600 dark:text-blue-400" })}
           </div>
           <h2 className="text-3xl font-bold text-gray-900 dark:text-dark-text">
             Welcome Back
@@ -107,7 +107,7 @@ export default function LoginPage() {
                   placeholder="you@example.com"
                   className={`pl-10 ${errors.email ? "border-red-500 focus:ring-red-500" : ""}`}
                 />
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-dark-muted" />
+                {getLucideIcon("Lock", { className: "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-dark-muted" })}
               </div>
               {errors.email && (
                 <p className="text-xs text-red-600 dark:text-red-400">
@@ -128,13 +128,13 @@ export default function LoginPage() {
                   placeholder="Enter your password"
                   className={`pl-10 pr-10 ${errors.password ? "border-red-500 focus:ring-red-500" : ""}`}
                 />
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-dark-muted" />
+                {getLucideIcon("Lock", { className: "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-dark-muted" })}
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-dark-muted hover:text-gray-600 dark:hover:text-dark-text"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? getLucideIcon("EyeOff", { className: "w-4 h-4" }) : getLucideIcon("Eye", { className: "w-4 h-4" })}
                 </button>
               </div>
               {errors.password && (
@@ -157,7 +157,7 @@ export default function LoginPage() {
                 </>
               ) : (
                 <>
-                  <LogIn className="w-5 h-5" />
+                  {getLucideIcon("LogIn", { className: "w-5 h-5" })}
                   Sign In
                 </>
               )}

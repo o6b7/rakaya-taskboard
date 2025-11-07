@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { LayoutGrid, Table, Clock, List, Calendar, Tag, FileText, Lock, LockOpen, Users } from "lucide-react";
+import { LayoutGrid, Table, Clock, List } from "lucide-react";
 import { getLucideIcon } from "../../lib/getLucideIcon";
 
 export default function ProjectPageSkeleton() {

@@ -1,5 +1,5 @@
 import React from "react";
-import { Plus } from "lucide-react";
+import { getLucideIcon } from "../../lib/getLucideIcon";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "ghost";
@@ -23,7 +23,7 @@ export const Button: React.FC<ButtonProps> = ({
 
   return (
     <button className={`${base} ${styles} ${className}`} {...props}>
-      {icon && <Plus className="w-4 h-4" />}
+      {icon && getLucideIcon("Plus", { className: "w-4 h-4" })}
       {children}
     </button>
   );
