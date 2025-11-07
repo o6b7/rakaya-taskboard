@@ -75,14 +75,14 @@ export default function TaskListView({ projectId }: TaskListViewProps) {
         <div className="flex-1 max-w-md">
           <div className="relative">
             {getLucideIcon("Search", {
-              className: "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground",
+              className: "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500",
             })}
             <input
               type="text"
               placeholder="Search tasks..."
               value={searchQuery}
               onChange={(e) => dispatch(setSearchQuery(e.target.value))}
-              className="w-full pl-10 pr-4 py-2 text-sm border border-border rounded-xl bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-dark-surface text-gray-900 dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary dark:focus:border-primary transition-all"
             />
           </div>
         </div>
@@ -91,19 +91,19 @@ export default function TaskListView({ projectId }: TaskListViewProps) {
         <div className="flex gap-2 flex-wrap">
           {[
             { value: "all", label: "All", icon: "Filter" },
-            { value: "High", label: "High", icon: "AlertTriangle", color: "text-red-600" },
-            { value: "Medium", label: "Medium", icon: "Minus", color: "text-amber-600" },
-            { value: "Low", label: "Low", icon: "ArrowDown", color: "text-green-600" },
+            { value: "High", label: "High", icon: "AlertTriangle", color: "text-red-600 dark:text-red-400" },
+            { value: "Medium", label: "Medium", icon: "Minus", color: "text-amber-600 dark:text-amber-400" },
+            { value: "Low", label: "Low", icon: "ArrowDown", color: "text-green-600 dark:text-green-400" },
           ].map((opt) => (
             <button
               key={opt.value}
               onClick={() => dispatch(setFilterPriority(opt.value as any))}
               className={`
                 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all
-                border shadow-sm hover:scale-105 active:scale-95
+                border border-gray-200 dark:border-gray-700 shadow-sm hover:scale-105 active:scale-95
                 ${filterPriority === opt.value
-                  ? "bg-primary text-primary-foreground border-primary shadow-md"
-                  : "bg-background text-muted-foreground border-border hover:bg-muted"
+                  ? "bg-primary-500 text-white border-primary-500 shadow-md"
+                  : "bg-white dark:bg-dark-surface text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
                 }
               `}
             >
@@ -117,7 +117,7 @@ export default function TaskListView({ projectId }: TaskListViewProps) {
         <select
           value={filterStatus}
           onChange={(e) => dispatch(setFilterStatus(e.target.value as any))}
-          className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+          className="px-3 py-1.5 rounded-full text-xs font-medium border border-gray-200 dark:border-gray-700 bg-white dark:bg-dark-surface text-gray-900 dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary dark:focus:border-primary transition-all"
         >
           {[
             { value: "all", label: "All Status" },
@@ -127,7 +127,7 @@ export default function TaskListView({ projectId }: TaskListViewProps) {
             { value: "needreview", label: "Need Review" },
             { value: "done", label: "Done" },
           ].map((opt) => (
-            <option key={opt.value} value={opt.value}>
+            <option key={opt.value} value={opt.value} className="bg-white dark:bg-dark-surface text-gray-900 dark:text-dark-text">
               {opt.label}
             </option>
           ))}

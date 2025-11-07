@@ -80,19 +80,19 @@ export default function TaskTableView({ projectId }: TaskTableViewProps) {
   return (
     <>
       {/* ───── FILTER BAR ───── */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between pb-4 border-b border-border">
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between pb-4 border-b border-border dark:border-gray-700">
         {/* Search */}
         <div className="flex-1 max-w-md">
           <div className="relative">
             {getLucideIcon("Search", {
-              className: "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground",
+              className: "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500",
             })}
             <input
               type="text"
               placeholder="Search tasks..."
               value={searchQuery}
               onChange={(e) => dispatch(setSearchQuery(e.target.value))}
-              className="w-full pl-10 pr-4 py-2 text-sm border border-border rounded-xl bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-dark-surface text-gray-900 dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary dark:focus:border-primary transition-all"
             />
           </div>
         </div>
@@ -105,10 +105,10 @@ export default function TaskTableView({ projectId }: TaskTableViewProps) {
               onClick={() => dispatch(setFilterPriority(o.v as any))}
               className={`
                 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all
-                border shadow-sm hover:scale-105 active:scale-95
+                border border-gray-200 dark:border-gray-700 shadow-sm hover:scale-105 active:scale-95
                 ${filterPriority === o.v
-                  ? "bg-primary text-primary-foreground border-primary shadow-md"
-                  : "bg-background text-muted-foreground border-border hover:bg-muted"
+                  ? "bg-primary-500 text-white border-primary-500 shadow-md"
+                  : "bg-white dark:bg-dark-surface text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
                 }
               `}
             >
@@ -121,13 +121,16 @@ export default function TaskTableView({ projectId }: TaskTableViewProps) {
         {/* Status dropdown */}
         <select
           value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+          onChange={(e) => dispatch(setFilterStatus(e.target.value as any))}
+          className="px-3 py-1.5 rounded-full text-xs font-medium border border-gray-200 dark:border-gray-700 bg-white dark:bg-dark-surface text-gray-900 dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary dark:focus:border-primary transition-all"
         >
           {statusOpts.map((s) => (
-            <option key={s.v} value={s.v}>{s.l}</option>
+            <option key={s.v} value={s.v} className="bg-white dark:bg-dark-surface text-gray-900 dark:text-dark-text">
+              {s.l}
+            </option>
           ))}
         </select>
+
       </div>
 
       {/* ───── MOBILE TABLE (horizontal scroll) ───── */}
