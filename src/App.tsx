@@ -12,6 +12,8 @@ import SettingsPage from "./pages/Settings/SettingsPage";
 import RegisterPage from "./pages/Auth/RegisterPage";
 import { jwtDecode } from "jwt-decode";
 import { clearCredentials, setCredentials, finishAuthInitialization } from "./store/slices/authSlice";
+import UsersPage from "./pages/Users/UsersPage";
+import CalendarPage from "./pages/Calendar/CalendarPage";
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isAuthInitialized } = useAppSelector((state) => state.auth);
@@ -88,6 +90,18 @@ const App: React.FC = () => {
             </PrivateRoute>
           }
         />
+
+        <Route
+          path="/users"
+          element={
+            <PrivateRoute>
+              <UsersPage />
+            </PrivateRoute>
+          }
+        />
+
+
+
         <Route
           path="/settings"
           element={

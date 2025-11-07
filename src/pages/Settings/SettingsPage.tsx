@@ -1,16 +1,35 @@
+// src/pages/Settings/SettingsPage.tsx
 import React, { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Trash2, Eye, EyeOff, Loader2, Save, X, User, Lock, Shield } from "lucide-react";
+import {
+  Camera,
+  Trash2,
+  Eye,
+  EyeOff,
+  Loader2,
+  Save,
+  X,
+  User,
+  Lock,
+  Shield,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
 import Avatar from "../../components/Common/Avatar";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { useAppSelector } from "../../store";
 import { useUpdateUserMutation } from "../../api/users.api";
 import { useDispatch } from "react-redux";
-import { showSuccess, showError, confirmAction, showWarning } from "../../utils/sweetAlerts";
+import {
+  showSuccess,
+  showError,
+  confirmAction,
+  showWarning,
+} from "../../utils/sweetAlerts";
 import { updateUser } from "../../store/slices/authSlice";
 import bcrypt from "bcryptjs";
 
@@ -19,24 +38,66 @@ const profileSchema = z.object({
   email: z.string().email("Invalid email address"),
 });
 
-const passwordSchema = z.object({
-  oldPassword: z.string().min(1, "Current password is required"),
-  newPassword: z.string().min(6, "New password must be at least 6 characters"),
-  confirmPassword: z.string(),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
+/* ──────────────────────────────────────────────────────────────
+   SAME PASSWORD RULES AS REGISTRATION
+   ────────────────────────────────────────────────────────────── */
+const passwordSchema = z
+  .object({
+    oldPassword: z.string().min(1, "Current password is required"),
+    newPassword: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        "Password must contain at least one uppercase, one lowercase, and one number"
+      ),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 type ProfileForm = z.infer<typeof profileSchema>;
 type PasswordForm = z.infer<typeof passwordSchema>;
 
+/* ──────────────────────────────────────────────────────────────
+   Password requirement UI component (same as RegisterPage)
+   ────────────────────────────────────────────────────────────── */
+const PasswordRequirement = ({
+  ok,
+  text,
+}: {
+  ok: boolean;
+  text: string;
+}) => (
+  <div className="flex items-center gap-2">
+    {ok ? (
+      <CheckCircle className="w-4 h-4 text-green-500" />
+    ) : (
+      <XCircle className="w-4 h-4 text-gray-400" />
+    )}
+    <span
+      className={`text-sm ${
+        ok
+          ? "text-green-600 dark:text-green-400"
+          : "text-gray-500 dark:text-dark-muted"
+      }`}
+    >
+      {text}
+    </span>
+  </div>
+);
+
 export default function SettingsPage() {
   const dispatch = useDispatch();
   const currentUser = useAppSelector((state) => state.auth.user);
-  const [updateUserMutation, { isLoading: isUpdating }] = useUpdateUserMutation();
+  const [updateUserMutation, { isLoading: isUpdating }] =
+    useUpdateUserMutation();
 
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(currentUser?.avatar || null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(
+    currentUser?.avatar || null
+  );
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [showOldPass, setShowOldPass] = useState(false);
   const [showNewPass, setShowNewPass] = useState(false);
@@ -44,6 +105,9 @@ export default function SettingsPage() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  /* ──────────────────────────────────────────────────────────────
+     Profile form
+     ────────────────────────────────────────────────────────────── */
   const {
     register: registerProfile,
     handleSubmit: handleProfileSubmit,
@@ -58,18 +122,39 @@ export default function SettingsPage() {
     },
   });
 
+  /* ──────────────────────────────────────────────────────────────
+     Password form – now with strength tracking
+     ────────────────────────────────────────────────────────────── */
   const {
     register: registerPassword,
     handleSubmit: handlePasswordSubmit,
     formState: { errors: passwordErrors, isDirty: isPasswordDirty },
     reset: resetPassword,
+    watch: watchPassword,
   } = useForm<PasswordForm>({
     resolver: zodResolver(passwordSchema),
   });
 
-  // Watch profile form for changes
-  const watchedProfile = watchProfile();
+  const newPassword = watchPassword("newPassword", "");
 
+  const [passwordStrength, setPasswordStrength] = useState({
+    min: false,
+    upper: false,
+    lower: false,
+    num: false,
+  });
+
+  // Update strength indicators in real-time
+  useEffect(() => {
+    setPasswordStrength({
+      min: newPassword.length >= 8,
+      upper: /[A-Z]/.test(newPassword),
+      lower: /[a-z]/.test(newPassword),
+      num: /\d/.test(newPassword),
+    });
+  }, [newPassword]);
+
+  // Sync profile fields when user changes
   useEffect(() => {
     if (currentUser) {
       resetProfile({
@@ -80,18 +165,18 @@ export default function SettingsPage() {
     }
   }, [currentUser, resetProfile]);
 
+  /* ──────────────────────────────────────────────────────────────
+     Avatar handling
+     ────────────────────────────────────────────────────────────── */
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size (2MB max)
     if (file.size > 2 * 1024 * 1024) {
       showError("File too large", "Please choose an image smaller than 2MB");
       return;
     }
-
-    // Check file type
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith("image/")) {
       showError("Invalid file type", "Please choose a valid image file");
       return;
     }
@@ -112,7 +197,7 @@ export default function SettingsPage() {
       icon: "warning",
       confirmText: "Yes, Remove",
       cancelText: "Keep Photo",
-      confirmColor: "#dc2626"
+      confirmColor: "#dc2626",
     });
 
     if (result.isConfirmed) {
@@ -123,18 +208,23 @@ export default function SettingsPage() {
     }
   };
 
-  const handleUpdate = async (updates: Partial<ProfileForm & { avatar?: string }>) => {
+  /* ──────────────────────────────────────────────────────────────
+     Generic update helper
+     ────────────────────────────────────────────────────────────── */
+  const handleUpdate = async (
+    updates: Partial<ProfileForm & { avatar?: string }>
+  ) => {
     if (!currentUser?.id) {
       showError("User not found");
       return;
     }
 
     try {
-      const result = await updateUserMutation({ 
-        id: currentUser.id, 
-        updates 
+      const result = await updateUserMutation({
+        id: currentUser.id,
+        updates,
       }).unwrap();
-      
+
       dispatch(updateUser(updates));
       return result;
     } catch (err) {
@@ -144,11 +234,18 @@ export default function SettingsPage() {
     }
   };
 
+  /* ──────────────────────────────────────────────────────────────
+     Profile submit
+     ────────────────────────────────────────────────────────────── */
   const onProfileSubmit = async (data: ProfileForm) => {
-    const hasChanges = data.name !== currentUser?.name || data.email !== currentUser?.email;
-    
+    const hasChanges =
+      data.name !== currentUser?.name || data.email !== currentUser?.email;
+
     if (!hasChanges) {
-      showWarning("No changes detected", "Your profile information is already up to date.");
+      showWarning(
+        "No changes detected",
+        "Your profile information is already up to date."
+      );
       return;
     }
 
@@ -157,42 +254,52 @@ export default function SettingsPage() {
       text: "Are you sure you want to update your profile information?",
       icon: "question",
       confirmText: "Yes, Save Changes",
-      cancelText: "Cancel"
+      cancelText: "Cancel",
     });
 
     if (result.isConfirmed) {
       try {
         await handleUpdate(data);
-        showSuccess("Profile updated successfully!", "Your changes have been saved.");
-      } catch (error) {
-        // Error is already handled in handleUpdate
+        showSuccess(
+          "Profile updated successfully!",
+          "Your changes have been saved."
+        );
+      } catch {
+        // handled inside handleUpdate
       }
     }
   };
 
+  /* ──────────────────────────────────────────────────────────────
+     Password submit
+     ────────────────────────────────────────────────────────────── */
   const onPasswordSubmit = async (data: PasswordForm) => {
     const result = await confirmAction({
       title: "Change Password?",
       text: "Are you sure you want to change your password? You'll need to use your new password next time you sign in.",
       icon: "question",
       confirmText: "Yes, Change Password",
-      cancelText: "Cancel"
+      cancelText: "Cancel",
     });
     if (!result.isConfirmed) return;
 
     setIsChangingPassword(true);
     try {
       const hashedPassword = await bcrypt.hash(data.newPassword, 10);
-      await updateUserMutation({ 
-        id: currentUser!.id, 
-        updates: { password: hashedPassword }
+      await updateUserMutation({
+        id: currentUser!.id,
+        updates: { password: hashedPassword },
       }).unwrap();
 
       showSuccess("Password changed!", "Your password has been updated.");
       resetPassword();
       setShowPasswordForm(false);
-    } catch (err) {
-      showError("Failed to change password", "Please check your current password.");
+    } catch (err: any) {
+      const msg =
+        err?.data?.error ||
+        err?.error ||
+        "Failed to change password. Please check your current password.";
+      showError("Password Update Failed", msg);
     } finally {
       setIsChangingPassword(false);
     }
@@ -209,7 +316,9 @@ export default function SettingsPage() {
   if (!currentUser) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-dark-bg">
-        <div className="text-gray-500 dark:text-dark-muted">Loading user information...</div>
+        <div className="text-gray-500 dark:text-dark-muted">
+          Loading user information...
+        </div>
       </div>
     );
   }
@@ -255,7 +364,10 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <form onSubmit={handleProfileSubmit(onProfileSubmit)} className="space-y-6">
+              <form
+                onSubmit={handleProfileSubmit(onProfileSubmit)}
+                className="space-y-6"
+              >
                 <div className="grid gap-6 sm:grid-cols-2">
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700 dark:text-dark-text">
@@ -265,7 +377,9 @@ export default function SettingsPage() {
                       {...registerProfile("name")}
                       placeholder="John Doe"
                       className={`w-full dark:bg-dark-card dark:border-dark-border dark:text-dark-text dark:placeholder-gray-500 ${
-                        profileErrors.name ? "border-red-500 focus:ring-red-500" : ""
+                        profileErrors.name
+                          ? "border-red-500 focus:ring-red-500"
+                          : ""
                       }`}
                     />
                     {profileErrors.name && (
@@ -284,7 +398,9 @@ export default function SettingsPage() {
                       type="email"
                       placeholder="john@example.com"
                       className={`w-full dark:bg-dark-card dark:border-dark-border dark:text-dark-text dark:placeholder-gray-500 ${
-                        profileErrors.email ? "border-red-500 focus:ring-red-500" : ""
+                        profileErrors.email
+                          ? "border-red-500 focus:ring-red-500"
+                          : ""
                       }`}
                     />
                     {profileErrors.email && (
@@ -337,7 +453,9 @@ export default function SettingsPage() {
                 {!showPasswordForm ? (
                   <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-dark-card rounded-lg border border-gray-200 dark:border-dark-border">
                     <div>
-                      <h3 className="font-medium text-gray-900 dark:text-dark-text">Password</h3>
+                      <h3 className="font-medium text-gray-900 dark:text-dark-text">
+                        Password
+                      </h3>
                       <p className="text-sm text-gray-500 dark:text-dark-muted">
                         Last changed 2 weeks ago
                       </p>
@@ -359,7 +477,11 @@ export default function SettingsPage() {
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden"
                     >
-                      <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="space-y-4">
+                      <form
+                        onSubmit={handlePasswordSubmit(onPasswordSubmit)}
+                        className="space-y-4"
+                      >
+                        {/* Current Password */}
                         <div className="space-y-2">
                           <label className="block text-sm font-medium text-gray-700 dark:text-dark-text">
                             Current Password
@@ -376,7 +498,11 @@ export default function SettingsPage() {
                               onClick={() => setShowOldPass(!showOldPass)}
                               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-dark-muted hover:text-gray-700 dark:hover:text-dark-text"
                             >
-                              {showOldPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              {showOldPass ? (
+                                <EyeOff className="w-4 h-4" />
+                              ) : (
+                                <Eye className="w-4 h-4" />
+                              )}
                             </button>
                           </div>
                           {passwordErrors.oldPassword && (
@@ -386,6 +512,7 @@ export default function SettingsPage() {
                           )}
                         </div>
 
+                        {/* New Password */}
                         <div className="grid gap-4 sm:grid-cols-2">
                           <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-700 dark:text-dark-text">
@@ -403,9 +530,36 @@ export default function SettingsPage() {
                                 onClick={() => setShowNewPass(!showNewPass)}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-dark-muted hover:text-gray-700 dark:hover:text-dark-text"
                               >
-                                {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                {showNewPass ? (
+                                  <EyeOff className="w-4 h-4" />
+                                ) : (
+                                  <Eye className="w-4 h-4" />
+                                )}
                               </button>
                             </div>
+
+                            {/* Strength indicators */}
+                            {newPassword && (
+                              <div className="p-3 bg-gray-50 dark:bg-dark-card rounded-lg space-y-2">
+                                <PasswordRequirement
+                                  ok={passwordStrength.min}
+                                  text="At least 8 characters"
+                                />
+                                <PasswordRequirement
+                                  ok={passwordStrength.upper}
+                                  text="One uppercase letter"
+                                />
+                                <PasswordRequirement
+                                  ok={passwordStrength.lower}
+                                  text="One lowercase letter"
+                                />
+                                <PasswordRequirement
+                                  ok={passwordStrength.num}
+                                  text="One number"
+                                />
+                              </div>
+                            )}
+
                             {passwordErrors.newPassword && (
                               <p className="text-xs text-red-600 dark:text-red-400">
                                 {passwordErrors.newPassword.message}
@@ -413,6 +567,7 @@ export default function SettingsPage() {
                             )}
                           </div>
 
+                          {/* Confirm Password */}
                           <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-700 dark:text-dark-text">
                               Confirm New Password
@@ -426,10 +581,16 @@ export default function SettingsPage() {
                               />
                               <button
                                 type="button"
-                                onClick={() => setShowConfirmPass(!showConfirmPass)}
+                                onClick={() =>
+                                  setShowConfirmPass(!showConfirmPass)
+                                }
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-dark-muted hover:text-gray-700 dark:hover:text-dark-text"
                               >
-                                {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                {showConfirmPass ? (
+                                  <EyeOff className="w-4 h-4" />
+                                ) : (
+                                  <Eye className="w-4 h-4" />
+                                )}
                               </button>
                             </div>
                             {passwordErrors.confirmPassword && (
@@ -440,6 +601,7 @@ export default function SettingsPage() {
                           </div>
                         </div>
 
+                        {/* Buttons */}
                         <div className="flex justify-end gap-3 pt-2">
                           <Button
                             type="button"
@@ -459,7 +621,9 @@ export default function SettingsPage() {
                             ) : (
                               <Save className="w-4 h-4" />
                             )}
-                            {isChangingPassword ? "Updating..." : "Update Password"}
+                            {isChangingPassword
+                              ? "Updating..."
+                              : "Update Password"}
                           </Button>
                         </div>
                       </form>
@@ -549,19 +713,27 @@ export default function SettingsPage() {
               </h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-dark-muted">Member since</span>
+                  <span className="text-gray-500 dark:text-dark-muted">
+                    Member since
+                  </span>
                   <span className="text-gray-900 dark:text-dark-text font-medium">
-                    {currentUser.createdAt ? new Date(currentUser.createdAt).toLocaleDateString() : 'N/A'}
+                    {currentUser.createdAt
+                      ? new Date(currentUser.createdAt).toLocaleDateString()
+                      : "N/A"}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-dark-muted">Role</span>
+                  <span className="text-gray-500 dark:text-dark-muted">
+                    Role
+                  </span>
                   <span className="text-gray-900 dark:text-dark-text font-medium capitalize">
                     {currentUser.role}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-dark-muted">User ID</span>
+                  <span className="text-gray-500 dark:text-dark-muted">
+                    User ID
+                  </span>
                   <span className="text-gray-900 dark:text-dark-text font-medium text-xs">
                     {currentUser.id.slice(0, 8)}...
                   </span>

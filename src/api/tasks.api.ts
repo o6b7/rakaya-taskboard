@@ -1,4 +1,3 @@
-// src/api/tasks.api.ts
 import { createApi } from "@reduxjs/toolkit/query/react";
 import type { Task, NewTask } from "../types";
 import { authorizedBaseQuery } from "../lib/authorizedBaseQuery";

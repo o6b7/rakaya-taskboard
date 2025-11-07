@@ -15,11 +15,12 @@ const Sidebar = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { projectId } = useParams<{ projectId: string }>();
-  const location = useLocation(); // To detect current route
+  const location = useLocation(); 
 
   const { sidebarOpen } = useAppSelector((state) => state.ui);
   const { activeProject, isNewProjectModalOpen } = useAppSelector((state) => state.projects);
-  const authUser = JSON.parse(localStorage.getItem("authUser") || "{}");
+  const authUser = useAppSelector((state) => state.auth.user);
+  const isOwner = authUser?.role === "owner";
   const authUserId = authUser?.id;
   const [openProjects, setOpenProjects] = useState(true);
 
@@ -248,20 +249,23 @@ const Sidebar = () => {
               )}
             </div>
 
-            {/* Calendar */}
-            <button
-              onClick={() => handleNavigate("/users")}
-              className={clsx(
-                "flex items-center gap-3 w-full px-4 py-2.5 rounded-lg transition-colors",
-                isActiveRoute("/users")
-                  ? "bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-300 font-semibold"
-                  : "text-gray-700 dark:text-dark-text hover:bg-gray-100 dark:hover:bg-dark-card hover:text-gray-900 dark:hover:text-white"
-              )}
-            >
-              {getLucideIcon("Users", { className: "w-5 h-5" })}
-              <span className="font-medium">Users</span>
-            </button>
+            {/* Users – ONLY SHOW IF OWNER */}
+            {isOwner && (
+              <button
+                onClick={() => handleNavigate("/users")}
+                className={clsx(
+                  "flex items-center gap-3 w-full px-4 py-2.5 rounded-lg transition-colors",
+                  isActiveRoute("/users")
+                    ? "bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-300 font-semibold"
+                    : "text-gray-700 dark:text-dark-text hover:bg-gray-100 dark:hover:bg-dark-card hover:text-gray-900 dark:hover:text-white"
+                )}
+              >
+                {getLucideIcon("Users", { className: "w-5 h-5" })}
+                <span className="font-medium">Users</span>
+              </button>
+            )}
 
+            {/* Calendar */}
             <button
               onClick={() => handleNavigate("/calendar")}
               className={clsx(
