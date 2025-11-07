@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { closeTaskModal } from "../../store/slices/uiSlice";
 import type { RootState } from "../../store";
@@ -31,9 +31,8 @@ export default function AddTaskModal() {
   );
   const { activeProject } = useSelector((state: RootState) => state.projects);
 
-  const { data: projects = [] } =
-    useGetProjectsQuery();
-  const { data: users = [] } = useGetAllUsersQuery();
+  const { data: projects = [] } = useGetProjectsQuery();
+  const { data: allUsers = [] } = useGetAllUsersQuery();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -48,13 +47,12 @@ export default function AddTaskModal() {
   const storedUser = localStorage.getItem("authUser");
   const authUser = storedUser ? JSON.parse(storedUser) : null;
 
-
   const [createTask] = useCreateTaskMutation();
   const [updateTask] = useUpdateTaskMutation();
 
+  // Reset form when modal opens/closes or task changes
   useEffect(() => {
     if (selectedTask) {
-      // Edit mode: use the task's project
       setTitle(selectedTask.title);
       setDescription(selectedTask.description || "");
       setAttachments(selectedTask.attachments || []);
@@ -62,15 +60,14 @@ export default function AddTaskModal() {
       setColumn(selectedTask.column || "backlog");
       setProjectId(selectedTask.projectId || "");
       setAssigneeIds(selectedTask.assigneeIds || []);
-      setDeadline(selectedTask.deadline || "");
+      setDeadline(selectedTask.deadline.split("T")[0] || "");
     } else {
-      // Add mode: use active project if available
       resetFields();
       if (activeProject) {
         setProjectId(activeProject.id);
       }
     }
-  }, [selectedTask, activeProject]);
+  }, [selectedTask, activeProject, taskModalOpen]);
 
   const resetFields = () => {
     setTitle("");
@@ -85,6 +82,46 @@ export default function AddTaskModal() {
     setProjectSearch("");
   };
 
+  // Get selected project
+  const selectedProject = useMemo(() => {
+    return projects.find((p) => p.id === projectId);
+  }, [projects, projectId]);
+
+  // Filter users: only project members + creator (optional)
+  const projectMembers = useMemo(() => {
+    if (!selectedProject?.members) return [];
+    return allUsers.filter((user) => selectedProject.members.includes(user.id));
+  }, [selectedProject, allUsers]);
+
+  // Filter users by search
+  const filteredMembers = useMemo(() => {
+    return projectMembers.filter((u) =>
+      [u.name, u.id].some((field) =>
+        field?.toLowerCase().includes(userSearch.toLowerCase())
+      )
+    );
+  }, [projectMembers, userSearch]);
+
+  // Filter projects by search
+  const filteredProjects = useMemo(() => {
+    return projects.filter((p) =>
+      [p.name, p.id].some((field) =>
+        field?.toLowerCase().includes(projectSearch.toLowerCase())
+      )
+    );
+  }, [projects, projectSearch]);
+
+  // Clear invalid assignees when project changes
+  useEffect(() => {
+    if (selectedProject?.members) {
+      setAssigneeIds((prev) =>
+        prev.filter((id) => selectedProject.members.includes(id))
+      );
+    } else {
+      setAssigneeIds([]);
+    }
+  }, [selectedProject?.members]);
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
 
@@ -93,9 +130,7 @@ export default function AddTaskModal() {
       return toast.error("Maximum 3 pictures allowed");
     }
 
-    // Only take up to remaining slots from selected files
     const files = Array.from(e.target.files).slice(0, remainingSlots);
-
     const promises = files.map(
       (file) =>
         new Promise<string>((resolve, reject) => {
@@ -108,7 +143,6 @@ export default function AddTaskModal() {
 
     const base64Files = await Promise.all(promises);
     setAttachments((prev) => [...prev, ...base64Files]);
-
     e.target.value = "";
   };
 
@@ -146,41 +180,25 @@ export default function AddTaskModal() {
 
     try {
       if (selectedTask) {
-        await updateTask({ ...selectedTask, ...payload }).unwrap();
-        showSuccess("Task updated successfully 🎉");
+        await updateTask({ id: selectedTask.id, updates: payload }).unwrap();
+        showSuccess("Task updated successfully");
       } else {
         await createTask(payload).unwrap();
-        showSuccess("Task added successfully ✅");
+        showSuccess("Task added successfully");
         resetFields();
       }
       dispatch(closeTaskModal());
-    } catch {
-      showError("Failed to save task");
+    } catch (err: any) {
+      const message = err?.data?.message || "Failed to save task";
+      showError(message);
     }
   };
 
-
   if (!taskModalOpen) return null;
 
-  // Filters
-  const filteredUsers = users.filter((u) =>
-    [u.name, u.id].some((field) =>
-      field?.toLowerCase().includes(userSearch.toLowerCase())
-    )
-  );
-
-  const filteredProjects = projects.filter((p) =>
-    [p.name, p.id].some((field) =>
-      field?.toLowerCase().includes(projectSearch.toLowerCase())
-    )
-  );
-
   return (
-    <Dialog
-      open={taskModalOpen}
-      onOpenChange={() => dispatch(closeTaskModal())}
-    >
-      <DialogContent className="w-full max-w-lg h-[90vh] p-6 rounded-2xl bg-white dark:bg-dark-card border border-gray-200 dark:border-gray-700 shadow-xl overflow-auto">
+    <Dialog open={taskModalOpen} onOpenChange={() => dispatch(closeTaskModal())}>
+      <DialogContent className="w-full max-w-lg h-[90vh] p-6 rounded-2xl bg-white dark:bg-dark-card border border-gray-200 dark:border-gray-700 shadow-xl overflow-y-auto">
         <DialogHeader>
           <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
             {selectedTask ? "Edit Task" : "Add New Task"}
@@ -195,28 +213,28 @@ export default function AddTaskModal() {
         >
           {/* Title */}
           <Input
-            placeholder="Task title"
+            placeholder="Task title *"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="text-base font-medium border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg transition-colors"
+            className="text-base font-medium"
           />
 
           {/* Description */}
           <Textarea
-            placeholder="Task description..."
+            placeholder="Task description (optional)"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="h-24 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg transition-colors"
+            className="h-24 resize-none"
           />
 
           {/* Column & Priority */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex items-center gap-2">
-              {getLucideIcon("LayoutList", { className: "w-5 h-5 text-gray-500 dark:text-gray-400" })}
+              {getLucideIcon("LayoutList", { className: "w-5 h-5 text-gray-500" })}
               <select
                 value={column}
                 onChange={(e) => setColumn(e.target.value as ColumnType)}
-                className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-sm"
               >
                 <option value="backlog">Backlog</option>
                 <option value="todo">To Do</option>
@@ -227,146 +245,155 @@ export default function AddTaskModal() {
             </div>
 
             <div className="flex items-center gap-2">
-              {getLucideIcon("Tag", { className: "w-5 h-5 text-gray-500 dark:text-gray-400" })}
+              {getLucideIcon("AlertCircle", { className: "w-5 h-5 text-gray-500" })}
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as Priority)}
-                className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-sm"
               >
-                <option value="Low">🟢 Low</option>
-                <option value="Medium">🟡 Medium</option>
-                <option value="High">🔴 High</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
               </select>
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              {getLucideIcon("FolderKanban", { className: "w-5 h-5 text-gray-500 dark:text-gray-400" })}
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Project</span>
+          {/* Project Selection */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                {getLucideIcon("FolderKanban", { className: "w-5 h-5" })}
+                Project
+              </label>
               {activeProject && !selectedTask && (
-                <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded">
-                  Auto-selected from current project
+                <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full">
+                  Auto-selected
                 </span>
               )}
             </div>
 
-            {/* Project Search */}
             <Input
-              placeholder="Search project by name or ID..."
+              placeholder="Search projects..."
               value={projectSearch}
               onChange={(e) => setProjectSearch(e.target.value)}
-              className="border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg transition-colors"
             />
 
-            {/* Project List */}
-            <div className="flex flex-col max-h-44 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-2 bg-gray-50 dark:bg-gray-800/50">
-              {filteredProjects.length === 0 && (
-                <span className="text-gray-500 dark:text-gray-400 text-sm p-2">No projects found</span>
+            <div className="max-h-44 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800/50 p-1">
+              {filteredProjects.length === 0 ? (
+                <p className="text-sm text-gray-500 p-3 text-center">No projects found</p>
+              ) : (
+                filteredProjects.map((proj) => (
+                  <label
+                    key={proj.id}
+                    className={`flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors ${
+                      projectId === proj.id
+                        ? "bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100"
+                        : "hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="project"
+                      value={proj.id}
+                      checked={projectId === proj.id}
+                      onChange={() => setProjectId(proj.id)}
+                      className="w-4 h-4 text-blue-600"
+                    />
+                    <span className="w-6 h-6 flex-shrink-0">
+                      {proj.iconName
+                        ? getLucideIcon(proj.iconName, { className: "w-5 h-5" })
+                        : getLucideIcon("Folder", { className: "w-5 h-5" })}
+                    </span>
+                    <span className="text-sm truncate">{proj.name}</span>
+                  </label>
+                ))
               )}
-              {filteredProjects.map((proj) => (
-                <label
-                  key={proj.id}
-                  className={`flex items-center gap-2 cursor-pointer py-2 px-2 rounded-md transition-colors ${
-                    projectId === proj.id 
-                      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100" 
-                      : "hover:bg-gray-100 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="project"
-                    value={proj.id}
-                    checked={projectId === proj.id}
-                    onChange={() => setProjectId(proj.id)}
-                    className="w-4 h-4 text-blue-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-blue-500"
-                  />
-                  {/* Project icon */}
-                  <span className="w-6 h-6 flex-shrink-0">
-                    {proj.iconName 
-                      ? getLucideIcon(proj.iconName, { className: "w-5 h-5 text-gray-700 dark:text-gray-300" }) 
-                      : getLucideIcon("Folder", { className: "w-5 h-5 text-gray-700 dark:text-gray-300" })
-                    }
-                  </span>
-                  <span className="text-sm truncate">{proj.name} ({proj.id})</span>
-                </label>
-              ))}
             </div>
-
           </div>
 
           {/* Deadline */}
-          <div className="flex flex-col gap-1">
-            <label className="flex items-center gap-2 font-medium text-gray-700 dark:text-gray-300">
-              {getLucideIcon("Calendar", { className: "w-5 h-5" })}  Deadline
+          <div className="space-y-1">
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+              {getLucideIcon("Calendar", { className: "w-5 h-5" })}
+              Deadline *
             </label>
             <Input
               type="date"
               value={deadline}
               onChange={(e) => setDeadline(e.target.value)}
-              className="border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg transition-colors"
               min={new Date().toISOString().split("T")[0]}
             />
           </div>
 
-          {/* Assignees */}
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              {getLucideIcon("UserCircle2", { className: "w-5 h-5 text-gray-500 dark:text-gray-400" })}
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Assign Users
-              </span>
+          {/* Assignees - Only Project Members */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                {getLucideIcon("Users", { className: "w-5 h-5" })}
+                Assign Members
+              </label>
+              {projectMembers.length > 0 && (
+                <span className="text-xs text-gray-500">
+                  {projectMembers.length} member{projectMembers.length > 1 ? "s" : ""}
+                </span>
+              )}
             </div>
+
             <Input
-              placeholder="Search users by name or ID..."
+              placeholder={
+                projectMembers.length === 0
+                  ? "No members in this project"
+                  : "Search members..."
+              }
               value={userSearch}
               onChange={(e) => setUserSearch(e.target.value)}
-              className="border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg transition-colors"
+              disabled={projectMembers.length === 0}
             />
-            <div className="flex flex-col max-h-44 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-2 bg-gray-50 dark:bg-gray-800/50">
-              {filteredUsers.length === 0 && (
-                <span className="text-gray-500 dark:text-gray-400 text-sm p-2">No users found</span>
-              )}
-              {filteredUsers.map((user) => (
-                <label
-                  key={user.id}
-                  className="flex items-center gap-2 cursor-pointer py-2 px-2 rounded-md transition-colors hover:bg-gray-100 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300"
-                >
-                  <input
-                    type="checkbox"
-                    checked={assigneeIds.includes(user.id)}
-                    onChange={() => handleAssigneeToggle(user.id)}
-                    className="w-4 h-4 text-blue-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
-                  />
-                  <Avatar
-                    name={user.name}
-                    avatar={user.avatar || undefined}
-                    size={24}
-                  />
-                  <span className="text-sm truncate">{user.name} ({user.id})</span>
-                </label>
-              ))}
 
+            <div className="max-h-44 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800/50 p-1">
+              {projectMembers.length === 0 ? (
+                <p className="text-sm text-gray-500 p-3 text-center">
+                  No members in this project
+                </p>
+              ) : filteredMembers.length === 0 ? (
+                <p className="text-sm text-gray-500 p-3 text-center">No members found</p>
+              ) : (
+                filteredMembers.map((user) => (
+                  <label
+                    key={user.id}
+                    className="flex items-center gap-2 p-2 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={assigneeIds.includes(user.id)}
+                      onChange={() => handleAssigneeToggle(user.id)}
+                      className="w-4 h-4 text-blue-600 rounded"
+                    />
+                    <Avatar name={user.name} avatar={user.avatar} size={24} />
+                    <span className="text-sm truncate">{user.name}</span>
+                  </label>
+                ))
+              )}
             </div>
           </div>
 
           {/* Attachments */}
-          <div className="flex flex-col gap-2">
+          <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-              {getLucideIcon("Upload", { className: "w-5 h-5" })} Attach Pictures (Max 3)
+              {getLucideIcon("Paperclip", { className: "w-5 h-5" })}
+              Attachments (Max 3)
             </label>
 
-            {/* Upload Box */}
             <div
-              className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer bg-gray-50 dark:bg-gray-800/30 hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
+              className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 transition-colors bg-gray-50 dark:bg-gray-800/30"
               onClick={() => document.getElementById("task-image-input")?.click()}
             >
-              <p className="text-gray-500 dark:text-gray-400 text-sm text-center">
-                Click to upload or drag pictures here
+              <p className="text-sm text-gray-500 text-center">
+                Click to upload images
               </p>
               <Input
-                type="file"
                 id="task-image-input"
+                type="file"
                 accept="image/*"
                 multiple
                 className="hidden"
@@ -374,21 +401,20 @@ export default function AddTaskModal() {
               />
             </div>
 
-            {/* Thumbnails */}
             {attachments.length > 0 && (
-              <div className="mt-2 grid grid-cols-3 gap-2 max-h-36 overflow-y-auto">
-                {attachments.map((file, i) => (
+              <div className="grid grid-cols-3 gap-2">
+                {attachments.map((src, i) => (
                   <div key={i} className="relative group">
                     <img
-                      src={file}
-                      alt={`attachment-${i}`}
-                      className="w-full h-20 object-cover rounded-md border border-gray-300 dark:border-gray-600"
+                      src={src}
+                      alt="attachment"
+                      className="w-full h-20 object-cover rounded-md border"
                     />
                     <button
                       onClick={() => removeAttachment(i)}
-                      className="absolute top-1 right-1 m-1 bg-black/60 text-white p-1 rounded-full hover:bg-red-600 transition opacity-0 group-hover:opacity-100"
+                      className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition"
                     >
-                      {getLucideIcon("X", { className: "w-4 h-4" })}
+                      {getLucideIcon("X", { className: "w-3 h-3" })}
                     </button>
                   </div>
                 ))}
@@ -396,20 +422,20 @@ export default function AddTaskModal() {
             )}
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
+          {/* Buttons */}
+          <div className="flex gap-3 pt-4">
             <Button
-              variant="ghost"
+              variant="outline"
               onClick={() => dispatch(closeTaskModal())}
-              className="w-full sm:w-auto border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="flex-1"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSave}
-              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
             >
-              {selectedTask ? "Save Changes" : "Add Task"}
+              {selectedTask ? "Save Changes" : "Create Task"}
             </Button>
           </div>
         </motion.div>

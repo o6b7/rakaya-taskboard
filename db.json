@@ -591,6 +591,21 @@
         "U2",
         "U1762195789176"
       ]
+    },
+    {
+      "id": "f7a3",
+      "name": "k",
+      "description": "k",
+      "iconName": "AlarmCheck",
+      "deadline": "2026-01-01",
+      "visibility": "public",
+      "tags": [],
+      "ownerId": "6c4f",
+      "createdAt": "2025-11-07T09:53:43.324Z",
+      "members": [
+        "6c4f",
+        "U1762233824646165606an3"
+      ]
     }
   ],
   "comments": [

@@ -100,7 +100,14 @@ const App: React.FC = () => {
           }
         />
 
-
+        <Route
+          path="/calendar"
+          element={
+            <PrivateRoute>
+              <CalendarPage />
+            </PrivateRoute>
+          }
+        />
 
         <Route
           path="/settings"

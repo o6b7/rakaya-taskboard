@@ -10,6 +10,7 @@ import type {
 } from "../types";
 
 const SECRET_KEY = import.meta.env.VITE_JWT_SECRET_KEY;
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const authApi = createApi({
   reducerPath: "authApi",
@@ -26,7 +27,7 @@ export const authApi = createApi({
       queryFn: async (credentials) => {
         try {
           const response = await fetch(
-            `http://localhost:3000/users?email=${credentials.email}`
+            `${API_URL}/users?email=${credentials.email}`
           );
           if (!response.ok) throw new Error("Failed to fetch users");
 
@@ -61,7 +62,7 @@ export const authApi = createApi({
         try {
           // ---- 1. Email uniqueness ----
           const checkResponse = await fetch(
-            `http://localhost:3000/users?email=${encodeURIComponent(userData.email)}`
+            `${API_URL}/users?email=${encodeURIComponent(userData.email)}`
           );
           if (!checkResponse.ok) throw new Error("Failed to check existing users");
           const existingUsers = await checkResponse.json();
@@ -85,7 +86,7 @@ export const authApi = createApi({
           };
 
           // ---- 4. POST to json-server ----
-          const response = await fetch("http://localhost:3000/users", {
+          const response = await fetch(`${API_URL}/users`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(newUser),

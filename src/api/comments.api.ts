@@ -1,4 +1,3 @@
-// src/api/comments.api.ts
 import { createApi } from "@reduxjs/toolkit/query/react";
 import type { Comment, NewComment } from "../types";
 import { authorizedBaseQuery } from "../lib/authorizedBaseQuery";

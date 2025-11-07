@@ -58,8 +58,9 @@ export default function ProjectPage() {
   const currentUser = useAppSelector((state: RootState) => state.auth.user);
   const currentUserId = currentUser?.id || localStorage.getItem("userId");
 
-  // Owner check
+  // Owner and memeber check
   const isOwner = project?.ownerId === currentUserId;
+  const isMember = project?.members?.includes(currentUserId as string) || isOwner;
 
   const handleUpdateMembers = async (updatedUserIds: string[]) => {
     if (!project) return;
@@ -546,16 +547,39 @@ export default function ProjectPage() {
                   );
                 })}
               </div>
-              <div style={{width: "60%"}}></div>
               {/* Add Task Button */}
-              <Button
-                variant="primary"
-                icon
-                onClick={() => dispatch(openTaskModal(null))}
-                className="w-full sm:w-auto flex-shrink-0"
-              >
-                Add new task
-              </Button>
+              <div style={{width: "60%"}}></div>
+                <Button
+                  variant={isMember ? "primary" : "outline"}
+                  icon
+                  onClick={() => isMember && dispatch(openTaskModal(null))}
+                  disabled={!isMember}
+                  className={`w-full sm:w-auto flex-shrink-0 transition-all ${
+                    !isMember
+                      ? "cursor-not-allowed opacity-60 hover:opacity-60"
+                      : ""
+                  }`}
+                >
+                  {isMember ? (
+                    "Add new task"
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4 mr-2" />
+                      Add new task
+                    </>
+                  )}
+                </Button>
+
+                {/* Tooltip: You are not a member */}
+                {!isMember && (
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 p-3 bg-gray-900 dark:bg-gray-800 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+                    <p className="font-medium">You are not a member of this project</p>
+                    <p className="text-xs text-gray-300 mt-1">
+                      Only project members can create tasks.
+                    </p>
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -mt-1 w-3 h-3 bg-gray-900 dark:bg-gray-800 rotate-45"></div>
+                  </div>
+                )}
 
             </div>
 

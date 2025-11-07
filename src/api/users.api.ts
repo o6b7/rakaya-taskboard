@@ -1,4 +1,3 @@
-// src/api/users.api.ts
 import { createApi } from "@reduxjs/toolkit/query/react";
 import type { User, NewUser } from "../types";
 import { authorizedBaseQuery } from "../lib/authorizedBaseQuery";
