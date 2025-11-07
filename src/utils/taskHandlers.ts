@@ -12,8 +12,10 @@ import {
   showSuccess,
   confirmAction,
   showError,
+  showWarning,
 } from "./sweetAlerts";
 import type { Task } from "../types";
+import { compressImage } from "./CompressImage";
 
 export const useTaskOperations = (
   task: Task,
@@ -84,21 +86,47 @@ export const useTaskOperations = (
       const file = e.target.files?.[0];
       const attachments = task.attachments || [];
 
-      if (!file || !isProjectMember || attachments.length >= 3) return;
+      // Permission & limit checks
+      if (!file || !isProjectMember) return;
+      if (attachments.length >= 3) {
+        showWarning("Maximum 3 attachments allowed");
+        return;
+      }
       if (file.size > 5 * 1024 * 1024) {
         showWarning("File must be under 5 MB");
         return;
       }
 
       try {
-        const base64 = await toBase64(file);
+        let base64: string;
+
+        // Compress image files
+        if (file.type.startsWith("image/")) {
+          base64 = await compressImage(file, {
+            maxWidth: 800,
+            quality: 0.8,
+            format: "jpeg",
+          });
+        } else {
+          // Non-image: just convert to base64 (PDF, DOC, etc.)
+          base64 = await toBase64(file);
+        }
+
+        // Final safety check: reject if still too big (> 300 KB after compression)
+        if (base64.length > 400 * 1024) {
+          showWarning("File too large after compression. Try a smaller image.");
+          return;
+        }
+
         await updateTask({
           id: task.id,
           updates: { attachments: [...attachments, base64] },
         }).unwrap();
+
         showSuccess("Attachment uploaded");
-      } catch {
-        showWarning("Upload failed");
+      } catch (err: any) {
+        console.error("Upload error:", err);
+        showWarning("Upload failed. File may be corrupted or too large.");
       }
     },
     [task.id, task.attachments, isProjectMember, updateTask]

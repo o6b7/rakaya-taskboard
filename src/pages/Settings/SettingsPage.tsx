@@ -32,6 +32,7 @@ import {
 } from "../../utils/sweetAlerts";
 import { updateUser } from "../../store/slices/authSlice";
 import bcrypt from "bcryptjs";
+import { compressImage } from "../../utils/CompressImage";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -165,10 +166,7 @@ export default function SettingsPage() {
     }
   }, [currentUser, resetProfile]);
 
-  /* ──────────────────────────────────────────────────────────────
-     Avatar handling
-     ────────────────────────────────────────────────────────────── */
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -181,13 +179,13 @@ export default function SettingsPage() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const result = reader.result as string;
-      setAvatarPreview(result);
-      handleUpdate({ avatar: result });
-    };
-    reader.readAsDataURL(file);
+    try {
+      const compressedBase64 = await compressImage(file);
+      setAvatarPreview(compressedBase64);
+      handleUpdate({ avatar: compressedBase64 });
+    } catch (err) {
+      showError("Failed to process image");
+    }
   };
 
   const handleRemoveAvatar = async () => {
