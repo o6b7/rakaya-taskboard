@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { openTaskModal } from "../../store/slices/uiSlice";
@@ -41,7 +41,9 @@ export default function ProjectPage() {
   const sidebarOpen = useSelector((state: any) => state.ui.sidebarOpen);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [projectInfoOpen, setProjectInfoOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("Board");
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem("activeProjectTab") || "Board";
+  });
   const [addMembersModalOpen, setAddMembersModalOpen] = useState(false);
   const [viewOnlyMembers, setViewOnlyMembers] = useState(false);
 
@@ -61,6 +63,10 @@ export default function ProjectPage() {
   // Owner and memeber check
   const isOwner = project?.ownerId === currentUserId;
   const isMember = project?.members?.includes(currentUserId as string) || isOwner;
+
+  useEffect(() => {
+    localStorage.setItem("activeProjectTab", activeTab);
+  }, [activeTab]);
 
   const handleUpdateMembers = async (updatedUserIds: string[]) => {
     if (!project) return;
