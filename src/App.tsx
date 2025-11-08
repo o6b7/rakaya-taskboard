@@ -23,7 +23,7 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
       <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
         <div className="flex flex-col items-center space-y-4">
           <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-600 dark:text-gray-300 text-sm">Loading your workspace...</p>
+          <p className="text-gray-600 dark:text-gray-300 text-sm"></p>
         </div>
       </div>
     );

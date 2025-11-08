@@ -26,19 +26,30 @@ export default function BoardView({ projectId }: BoardViewProps) {
     data: apiTasks = [],
     isLoading,
     isError,
-    refetch,
   } = useGetTasksByProjectQuery(projectId);
   const [updateTask] = useUpdateTaskMutation();
 
-  // Optimized drag state management
+  // Optimistic drag state management
   const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null);
-  const [draggingFromColumn, setDraggingFromColumn] =
-    useState<ColumnType | null>(null);
-  const [optimisticTasks, setOptimisticTasks] = useState<Task[]>([]);
+  const [draggingFromColumn, setDraggingFromColumn] = useState<ColumnType | null>(null);
+  const [optimisticUpdates, setOptimisticUpdates] = useState<Record<string, ColumnType>>({});
 
-  // Use only API tasks - remove sample fallback
+  // Use only API tasks
   const baseTasks = apiTasks || [];
-  const tasks = optimisticTasks.length > 0 ? optimisticTasks : baseTasks;
+
+  // Merge optimistic updates with base tasks
+  const tasks = useMemo(() => {
+    if (Object.keys(optimisticUpdates).length === 0) {
+      return baseTasks;
+    }
+    
+    return baseTasks.map(task => {
+      if (optimisticUpdates[task.id]) {
+        return { ...task, column: optimisticUpdates[task.id] };
+      }
+      return task;
+    });
+  }, [baseTasks, optimisticUpdates]);
 
   // Detect device type (mobile vs desktop)
   const isTouchDevice = useMemo(
@@ -58,25 +69,40 @@ export default function BoardView({ projectId }: BoardViewProps) {
   // Handle task move
   const handleMoveTask = useCallback(
     async (taskId: string, newColumn: ColumnType) => {
-      const taskToMove = tasks.find((t) => t.id === taskId);
+      const taskToMove = baseTasks.find((t) => t.id === taskId);
       if (!taskToMove) return;
 
-      // Optimistic update for instant UI
-      setOptimisticTasks((prev) =>
-        prev.map((task) =>
-          task.id === taskId ? { ...task, column: newColumn } : task
-        )
-      );
+      const originalColumn = taskToMove.column;
+
+      // Immediate optimistic update
+      setOptimisticUpdates(prev => ({
+        ...prev,
+        [taskId]: newColumn
+      }));
 
       try {
-        await updateTask({ id: taskId, updates: { column: newColumn } }).unwrap();
-        refetch?.(); // Refresh data
+        // Update without refetch - let RTK Query handle cache updates
+        await updateTask({ 
+          id: taskId, 
+          updates: { column: newColumn } 
+        }).unwrap();
+        
+        // Success: keep the optimistic update until the next data fetch
+        // The cache update will eventually sync with our optimistic state
+        
       } catch (err) {
         console.error("Failed to move task:", err);
-        setOptimisticTasks([]); // revert on error
+        // Error: revert the optimistic update after a small delay for better UX
+        setTimeout(() => {
+          setOptimisticUpdates(prev => {
+            const newUpdates = { ...prev };
+            delete newUpdates[taskId];
+            return newUpdates;
+          });
+        }, 300);
       }
     },
-    [updateTask, refetch, tasks]
+    [updateTask, baseTasks]
   );
 
   // Drag event handlers
@@ -86,11 +112,9 @@ export default function BoardView({ projectId }: BoardViewProps) {
   }, []);
 
   const onDragEnd = useCallback(() => {
-    setTimeout(() => {
-      setDraggingTaskId(null);
-      setDraggingFromColumn(null);
-      setOptimisticTasks([]);
-    }, 100);
+    // Only clear dragging states, keep optimistic updates
+    setDraggingTaskId(null);
+    setDraggingFromColumn(null);
   }, []);
 
   return (
@@ -109,8 +133,7 @@ export default function BoardView({ projectId }: BoardViewProps) {
                 if (!a.pinned && b.pinned) return 1;
                 return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
               });
-
-
+              
               return (
                 <Column
                   key={col.key}
@@ -128,13 +151,11 @@ export default function BoardView({ projectId }: BoardViewProps) {
             })}
           </div>
         </section>
-        { 
-          tasks.length === 0 && (
-            <div className="mt-4 text-sm text-gray-500 dark:text-dark-muted text-center">
-              No tasks found for this project.
-            </div>
+        {tasks.length === 0 && (
+          <div className="mt-4 text-sm text-gray-500 dark:text-dark-muted text-center">
+            No tasks found for this project.
+          </div>
         )}
-
       </div>
     </DndProvider>
   );
