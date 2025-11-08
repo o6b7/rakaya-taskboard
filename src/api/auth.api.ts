@@ -41,9 +41,10 @@ export const authApi = createApi({
           const valid = await bcrypt.compare(credentials.password, user.password);
           if (!valid) throw new Error("Invalid credentials");
 
-          const expiresAt = Date.now() + 5 * 60 * 60 * 1000; // 5 hour
+          const expiresAt = Math.floor(Date.now() / 1000) + 5 * 60 * 60; 
           const payload = { userId: user.id, role: user.role, exp: expiresAt };
           const token = jwtEncode(payload, SECRET_KEY);
+
 
           localStorage.setItem("authToken", token);
           localStorage.setItem("authUser", JSON.stringify(user));
@@ -124,7 +125,7 @@ export const authApi = createApi({
 
         try {
           const decoded: any = jwtDecode(token);
-          const isValid = decoded.exp > Date.now();
+          const isValid = decoded.exp * 1000 > Date.now();
           return { data: isValid };
         } catch {
           return { data: false };

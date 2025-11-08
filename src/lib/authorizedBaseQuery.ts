@@ -13,7 +13,8 @@ export const authorizedBaseQuery = fetchBaseQuery({
       try {
         const decoded: any = jwtDecode(token);
 
-        const isExpired = decoded.exp && Date.now() >= decoded.exp;
+        const isExpired = decoded.exp && Date.now() >= decoded.exp * 1000;
+
         if (!isExpired) {
           headers.set("authorization", `Bearer ${token}`);
         }
@@ -37,7 +38,7 @@ export function validateToken(requiredRole?: "owner" | "member") {
 
   try {
     const decoded: any = jwtDecode(token);
-    const isExpired = decoded.exp && Date.now() >= decoded.exp;
+    const isExpired = decoded.exp && Date.now() >= decoded.exp * 1000;
 
     if (isExpired) {
       return false;
