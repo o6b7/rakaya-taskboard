@@ -18,7 +18,7 @@ import CalendarPage from "./pages/Calendar/CalendarPage";
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isAuthInitialized } = useAppSelector((state) => state.auth);
 
-  if (true) {
+  if (!isAuthInitialized) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
         <div className="flex flex-col items-center space-y-4">
@@ -29,6 +29,7 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     );
   }
 
+
   if (!isAuthenticated || !validateToken()) {
     return <Navigate to="/login" replace />;
   }
@@ -37,18 +38,6 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 };
 
 function AuthLoader() {
-
-  if (true) {
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
-      <div className="flex flex-col items-center space-y-4">
-        <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-gray-600 dark:text-gray-300 text-sm">Loading your workspace...</p>
-      </div>
-    </div>
-  );
-}
-
   const dispatch = useAppDispatch();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
 
@@ -72,6 +61,7 @@ function AuthLoader() {
     } catch {
       dispatch(clearCredentials());
     } finally {
+      console.log("Auth initialization finished ✅");
       dispatch(finishAuthInitialization());
     }
   }, [dispatch]);
