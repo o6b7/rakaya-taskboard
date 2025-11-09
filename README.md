@@ -1,73 +1,169 @@
-# React + TypeScript + Vite
+```markdown
+# 🧩 Rakaya Taskboard – Frontend based web app
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern **Task Management Board** built as part of the **Rakaya Frontend Developer Challenge**. This project demonstrates strong frontend architecture, clean UI implementation, state management using **Redux Toolkit**, and effective use of React with **TypeScript** and **Tailwind CSS**.
 
-Currently, two official plugins are available:
+## 🚀 Live Demo
+https://rakaya-taskboard.vercel.app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🧠 Overview
+This project was built for **A Task Management Board** for Frontend Developer Challenge. It focuses primarily on **frontend development** — UI, interactivity, and state management — using modern React and ecosystem tools.
 
-## React Compiler
+### Core Features
+- Four columns: **Backlog**, **To Do**, **In Progress**, **Need Review**
+- Full **CRUD** functionality for tasks
+- **Drag & Drop** support to move tasks between columns
+- **Task filtering** by priority and assignee
+- **Search** by task title or tag
+- Fully **responsive** design for desktop, tablet, and mobile
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## ✨ Extra Features Implemented
 
-## Expanding the ESLint configuration
+| Feature | Description |
+|---------|-------------|
+| **Dark Mode** | Toggle between light/dark themes (persistent state) |
+| **User Feedback Enhancements** | Integrated **SweetAlert2** for confirmations and **React Hot Toast** for notifications |
+| **Dashboard Statistics** | Added task and project summaries on the home page using **Recharts** |
+| **Skeleton Loading States** | Implemented skeleton screens for smoother loading |
+| **TypeScript + Redux Toolkit** | Strong typing and clean global state management |
+| **Tailwind CSS** | Modern, responsive, and customizable UI styling |
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 💡 Backend Approach – MockAPI & JSON Server
+Since the challenge's goal was to assess **frontend skills**, this project does **not** use a real backend. Instead, it uses a **mock backend** through **MockAPI.io** and **JSON Server** for local development.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 🧱 MockAPI.io
+I used [MockAPI.io](https://mockapi.io) to host mock data (users, projects, tasks, comments). This platform automatically generates RESTful endpoints and supports all CRUD operations, making it ideal for simulating API interactions in frontend projects.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Example endpoint:
+```
+https://<your-mockapi-id>.mockapi.io/api/v1/tasks
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+While MockAPI is not recommended for production, it's excellent for **temporary projects, testing, and demo environments** like this challenge.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 🧰 JSON Server (for local simulation)
+For local testing, **JSON Server** can be used to host the mock data from the included `db.json` file.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+#### Run locally:
+```bash
+npm run json:serve
 ```
+
+This will start JSON Server on:
+```
+http://localhost:4000
+```
+
+Your `db.json` file can hold mock collections such as:
+```json
+{
+  "tasks": [],
+  "projects": [],
+  "users": []
+}
+```
+
+You can also run both the frontend and mock API together:
+```bash
+npm run start:all
+```
+
+This command runs:
+- `vite` for the frontend
+- `json-server` for the local API
+
+## ⚙️ Installation & Setup
+
+### 1️⃣ Clone the Repository
+```bash
+git clone https://github.com/<your-username>/rakaya-taskboard.git
+cd rakaya-taskboard
+```
+
+### 2️⃣ Install Dependencies
+```bash
+npm install
+```
+
+### 3️⃣ Run the App in Development Mode
+```bash
+npm run dev
+```
+
+### 4️⃣ Run JSON Server (optional)
+```bash
+npm run json:serve
+```
+
+### 5️⃣ Build for Production
+```bash
+npm run build
+```
+
+### 6️⃣ Preview the Production Build
+```bash
+npm run preview
+```
+
+## 🧩 Tech Stack
+
+| Category         | Technology                           |
+|------------------|--------------------------------------|
+| Framework        | **React 19 + TypeScript**            |
+| State Management | **Redux Toolkit**                    |
+| UI Styling       | **Tailwind CSS**                     |
+| Animations       | **Framer Motion**                    |
+| Notifications    | **React Hot Toast**, **SweetAlert2** |
+| Charts           | **Recharts**                         |
+| API Mocking      | **MockAPI.io**, **JSON Server**      |
+| Routing          | **React Router DOM (v7)**            |
+| Form Handling    | **React Hook Form + Zod Validation** |
+
+## 📁 Project Structure
+```
+src/
+├── api/                 # API slices (tasks, projects, users, comments)
+├── app/                 # Redux store configuration
+├── components/
+│   ├── Layout/          # Navbar, Sidebar, Layout components
+│   ├── Tasks/           # Task board, cards, and modals
+│   ├── Projects/        # Project-related components
+│   └── Skeletons/       # Loading skeletons
+├── pages/               # Page-level components (Home, Login, Register, etc.)
+├── store/               # Redux slices
+├── styles/              # Global CSS and Tailwind setup
+├── types/               # TypeScript interfaces and types
+├── utils/               # Helper functions and alerts
+├── App.tsx              # Main app entry
+└── main.tsx             # Root render setup
+```
+
+## 🔐 Environment Variables
+You may add your environment configuration in a `.env` file.
+Example:
+```
+VITE_API_BASE_URL=https://<your-mockapi-id>.mockapi.io/api/v1
+```
+
+## 🧾 Scripts
+
+| Command              | Description                               |
+|----------------------|-------------------------------------------|
+| `npm run dev`        | Start development server (Vite)           |
+| `npm run build`      | Build the app for production              |
+| `npm run preview`    | Preview the production build              |
+| `npm run json:serve` | Start JSON Server on port 4000            |
+| `npm run start:all`  | Run frontend and JSON server concurrently |
+
+## 🧑‍💻 Author
+**Qusai Abdullah**  
+Frontend Developer  
+Email: qusaii.abdullah@gmail.com
+Portfolio: https://quasi-abdullah-portfolio.vercel.app
+LinkedIn: http://linkedin.com/in/qusaiabdullah/
+
+## 🏁 Notes
+- The project was designed with **frontend focus only** — no backend logic or authentication persistence.
+- MockAPI endpoints simulate all CRUD requests and are ideal for short-term demos.
+- The UI prioritizes responsiveness, accessibility, and modern styling.
+- The architecture is modular and scalable for future feature additions.
