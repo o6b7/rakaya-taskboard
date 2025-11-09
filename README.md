@@ -1,4 +1,3 @@
-```markdown
 # 🧩 Rakaya Taskboard – Frontend based web app
 
 A modern **Task Management Board** built as part of the **Rakaya Frontend Developer Challenge**. This project demonstrates strong frontend architecture, clean UI implementation, state management using **Redux Toolkit**, and effective use of React with **TypeScript** and **Tailwind CSS**.
